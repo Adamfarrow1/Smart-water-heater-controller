@@ -3,7 +3,8 @@ import React from 'react';
 import { ImageBackground, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import home_bg from '../assets/home_bg.jpg';
-
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+const Stack = createNativeStackNavigator();
 const LandingPage = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -13,11 +14,11 @@ const LandingPage = ({ navigation }) => {
             <Text style={styles.title}>Smart Water Heater Controller</Text>
             <Text style={styles.subtitle}>Control all your smart devices and save energy</Text>
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={[styles.button, styles.gettingStartedButton]} /*onPress={() => navigation.navigate('Register')}*/>
+              <TouchableOpacity style={[styles.button, styles.gettingStartedButton]} onPress={() => navigation.navigate('Register')}>
                 <Text style={styles.buttonText}>Getting started</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.loginButton]} /*onPress={() => navigation.navigate('Login')}*/>
-                <Text style={styles.buttonText}>Log In</Text>
+              <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.buttonText} >Log In</Text>
               </TouchableOpacity>
             </View>
           </View>

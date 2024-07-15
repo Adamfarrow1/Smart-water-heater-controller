@@ -2,20 +2,27 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LandingPage from './Pages/Landing.js'; // Import the landing page
-//import LoginScreen from './LoginScreen'; // Create a LoginScreen component similarly
-//import RegisterScreen from './RegisterScreen'; // Create a RegisterScreen component similarly
+import LandingPage from './Screens/Landing.js'; 
+import Login from './Screens/Login.js';
+import Register from './Screens/Register.js';
+
+import { AuthenticationContext } from './context/userContext.js';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Landing">
-        <Stack.Screen name="Landing" component={LandingPage} options={{ headerShown: false }} />
 
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthenticationContext>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Landing">
+          <Stack.Screen name="Landing" component={LandingPage} options={{ headerShown: false }} />
+          <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+          <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
+          
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthenticationContext>
   );
 };
 
