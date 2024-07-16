@@ -3,7 +3,7 @@ import {auth,  signInWithEmailAndPassword } from '../context/firebaseConfig';
 import { useState } from 'react';
 import { useUser } from '../context/userContext';
 
-export default function Login() {
+export default function Login( { navigation }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +14,9 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log(user)
+      navigation.navigate("Home")
       console.log("it works")
+      
     } catch (error) {
       console.log("it doe snot work")
       console.log(error);
