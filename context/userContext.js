@@ -10,6 +10,9 @@ export const AuthenticationContext = ({ children }) => {
 
      // delcare our user useState
     const [user, setUser] = useState(null);
+
+    //declare variable to keep track of when we are waiting for a response
+    const [loading, setLoading] = useState(null);
     
 
     useEffect(() => {
@@ -17,6 +20,7 @@ export const AuthenticationContext = ({ children }) => {
     // firebase does alot of heavy lifting here 
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      setLoading(false)
     });
 
 
@@ -30,7 +34,7 @@ export const AuthenticationContext = ({ children }) => {
 
   // we must return our context within this form.
   return (
-    <UserContext.Provider value={{ user }}>
+    <UserContext.Provider value={{ user, loading }}>
       {children}
     </UserContext.Provider>
   );
