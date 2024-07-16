@@ -1,16 +1,23 @@
 
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator  } from "react-native";
 import React from "react";
 import { useUser } from "../context/userContext";
 
 
 const Homescreen = () => {
-    const { user } = useUser(); 
+    const { user, loading } = useUser(); 
+    if(loading){
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="large" color="#fff" />
+            </View>
+        );
+    }
     return (
       <View style={styles.container}>
         <View style={styles.greetingContainer}>
             <Text style={styles.greeting1}>Good afternoon,</Text>
-            <Text style={styles.greeting2}>{user?.displayName != null ? user.displayName : "User"}</Text>
+            <Text style={styles.greeting2}>{user.email != null ? user.email : "User"}</Text>
         </View>
 
         <View style={styles.devicesContainer}>
@@ -18,7 +25,7 @@ const Homescreen = () => {
         {/* for now will be always assumed no devices. */}
             <Text style={styles.noDeviceText}>No devices connected</Text>
             <Pressable style={styles.button}>
-                <Text style={styles.buttonText}>Add Device</Text>
+                <Text style={styles.buttonText} onPress={console.log(user)}>Add Device</Text>
             </Pressable>
         </View>
       </View>
