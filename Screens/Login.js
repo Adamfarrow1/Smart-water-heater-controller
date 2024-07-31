@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Button, TextInput, Pressable } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Pressable } from 'react-native';
 import {auth,  signInWithEmailAndPassword } from '../context/firebaseConfig';
 import { useState } from 'react';
 import { useUser } from '../context/userContext';
@@ -13,9 +13,7 @@ export default function Login( { navigation }) {
     console.log("logging in")
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      console.log(user)
       navigation.navigate("Home")
-      console.log("it works")
       
     } catch (error) {
       console.log("it doe snot work")

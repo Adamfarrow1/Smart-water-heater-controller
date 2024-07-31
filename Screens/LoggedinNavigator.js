@@ -4,7 +4,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import Homescreen from './Homescreen';
-import Login from './Login';
 import Notifications from './Notifications';
 import TempControl from './TempControl';
 import EnergySaved from './EnergySaved';
@@ -55,9 +54,9 @@ function HomeStack(){
 function Home() {
     return (
         <Tab.Navigator 
-            initialRouteName="Your Devices"
+            initialRouteName="Your Devices home"
             screenOptions={({ route }) => {
-                const headerOptions = route.name === 'Your Devices' ? { headerShown: false } : {
+                const headerOptions = route.name === 'Your Devices home' ? { headerShown: false } : {
                     headerTitleAlign: 'center',
                     headerStyle: {
                         backgroundColor: '#1b252d',
@@ -83,7 +82,7 @@ function Home() {
                     tabBarIcon: ({ color, size }) => {
                         let icon;
 
-                        if (route.name === 'Your Devices') {
+                        if (route.name === 'Your Devices home') {
                             icon = 'home'; 
                         } else if (route.name === 'Schedule') {
                             icon = 'calendar'; 
@@ -99,7 +98,7 @@ function Home() {
             }}
         >
             <Tab.Screen 
-                name="Your Devices" 
+                name="Your Devices home" 
                 component={HomeStack} 
                 options={{ tabBarLabel: 'Home' }}
             />
