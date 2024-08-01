@@ -32,9 +32,9 @@ function EnergySaved() {
           yAxisSuffix="hz"
           yAxisInterval={1}
           chartConfig={{
-            backgroundColor: '#22303c', // New chart background color
+            backgroundColor: '#22303c',
             backgroundGradientFrom: '#22303c',
-            backgroundGradientTo: '#22303c', // Optional: Gradient end color
+            backgroundGradientTo: '#22303c',
             decimalPlaces: 0,
             color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
             labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
 },
   container: {
     flex: 1,
-    backgroundColor: "#1b252d", // Container background color
+    backgroundColor: "#1b252d",
     alignItems: 'center',
   },
   chartContainer: {
@@ -81,11 +81,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   tipsContainer: {
-    width: '100%', // Ensure width fits within the screen
-    height: 250, // Set a fixed height for the carousel
+    width: '100%', 
+    height: 250, 
     marginTop: 20,
-    justifyContent: 'center', // Center carousel vertically if needed
-    alignItems: 'center', // Center carousel horizontally if needed
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 });
 
