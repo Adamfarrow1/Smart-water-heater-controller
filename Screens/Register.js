@@ -13,8 +13,6 @@ export default function Register() {
   const handleRegister = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      if(user)
-        console.log(user)
       console.log("it works")
     } catch (error) {
       console.log("it doe snot work")

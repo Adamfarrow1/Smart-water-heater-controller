@@ -1,69 +1,91 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import Tips from './Carousel';
 
 function EnergySaved() {
   const [data, setData] = useState([60, 60, 60, 60, 60, 60]);
 
-  // Generate random number between min and max
-  const getRandomNumber = (min, max) => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
+  const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // Update data function
   const updateData = () => {
     const newData = data.map(() => getRandomNumber(57, 63));
     setData(newData);
   };
 
-  // Function to determine color for each dot based on value
-  const getDotProps = (value) => ({
-    r: '6',
-    strokeWidth: '2',
-    stroke: value === 60 ? 'green' : 'red',
-    fill: value === 60 ? 'green' : 'red',
-  });
-
   return (
-    <TouchableOpacity style={styles.container} onPress={updateData}>
-      <View style={styles.container}>
+    <View style={styles.container}>
+          <Text style={styles.text}>Device Selected:</Text>
+          <Text style={styles.deviceName}>Home device</Text>
+      <Text style={styles.text}>Frequencies:</Text>
+      <TouchableOpacity style={styles.chartContainer} onPress={updateData}>
+        
         <LineChart
           data={{
             labels: ['January', 'February', 'March', 'April', 'May', 'June'],
             datasets: [{ data }],
           }}
-          width={Dimensions.get('window').width - 40} // from react-native
+          width={Dimensions.get('window').width - 40}
           height={220}
           yAxisMax={70}
           yAxisMin={50}
           yAxisSuffix="hz"
-          yAxisInterval={1} // optional, defaults to 1
+          yAxisInterval={1}
           chartConfig={{
-            backgroundColor: 'transparent',
-            decimalPlaces: 0, // optional, defaults to 2dp
+            backgroundColor: '#22303c', // New chart background color
+            backgroundGradientFrom: '#22303c',
+            backgroundGradientTo: '#22303c', // Optional: Gradient end color
+            decimalPlaces: 0,
             color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
             labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            style: {
-              borderRadius: 16,
-            },
-            propsForDots: data.map(value => getDotProps(value)),
+            style: { borderRadius: 16 },
           }}
           bezier
-          style={{
-            marginVertical: 8,
-            borderRadius: 16,
-          }}
+          style={styles.chart}
         />
+      </TouchableOpacity>
+      
+      <View style={styles.tipsContainer}>
+      <Text style={styles.text}>Tips:</Text>
+        <Tips />
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  text:{
+    fontSize: 13,
+    marginTop: 50,
+    alignSelf: 'left',
+    marginLeft: 20,
+    color: 'white',
+  },
+  deviceName: {
+    color: "white",
+    fontSize: 23,
+    alignSelf: 'left',
+    marginLeft: 20,
+},
   container: {
     flex: 1,
-    backgroundColor: "#1b252d",
+    backgroundColor: "#1b252d", // Container background color
     alignItems: 'center',
+  },
+  chartContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  tipsContainer: {
+    width: '100%', // Ensure width fits within the screen
+    height: 250, // Set a fixed height for the carousel
+    marginTop: 20,
+    justifyContent: 'center', // Center carousel vertically if needed
+    alignItems: 'center', // Center carousel horizontally if needed
   },
 });
 
