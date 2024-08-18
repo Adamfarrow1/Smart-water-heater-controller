@@ -8,7 +8,7 @@ function TempControl() {
       <View style={styles.container}>
         <Text style={styles.text}>Device Selected:</Text>
         <Text style={styles.deviceName}>Home device</Text>
-       <RadialVariant initialSpeed={50} min = {0} max={120} />
+       <RadialVariant />
        <Text style={styles.caption}>Adjust the smart water heater temperature to suit you</Text>
 
       </View>

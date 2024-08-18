@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { RadialSlider } from 'react-native-radial-slider';
 
-const RadialVariant = ({ initialSpeed = 0, min = 0, max = 120 }) => {
-  const [speed, setSpeed] = useState(initialSpeed);
+const RadialVariant = () => {
+  const [speed, setSpeed] = useState(0);
 
   return (
     <View style={styles.container}>
@@ -12,16 +12,16 @@ const RadialVariant = ({ initialSpeed = 0, min = 0, max = 120 }) => {
         radius={150}
         subTitle=""
         value={speed} 
-        min={min} 
-        max={max} 
+        min={120} 
+        max={140} 
         onChange={setSpeed}
         title="Temperature"
-        unit='°F'
+        unit="°F"
         unitStyle={styles.unitStyle}
+        isHideTailText={true}
         thumbColor="#FFFFFF"
-        startAngle={150}
         stroke="#FFFFFF"
-        titleStyle={styles.titleStyle}  // Assuming `titleStyle` can be applied
+        titleStyle={styles.titleStyle} 
         valueStyle={styles.valueStyle}
         contentStyle={styles.contentStyle}
         centerContentStyle={styles.centerContentStyle}
