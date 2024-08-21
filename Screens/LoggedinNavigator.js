@@ -10,7 +10,7 @@ import NotificationsStack from '../nav/NotificationStack.js';
 import TempControl from './TempControl';
 import EnergySaved from './EnergySaved';
 import Schedule from './Schedule';
-import DrawerMenu from '../nav/DrawerMenu';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
