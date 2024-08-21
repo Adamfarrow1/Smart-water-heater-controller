@@ -1,13 +1,16 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import Homescreen from './Homescreen';
-import Notifications from './Notifications';
+
+import NotificationsStack from '../nav/NotificationStack.js';
 import TempControl from './TempControl';
 import EnergySaved from './EnergySaved';
 import Schedule from './Schedule';
+import DrawerMenu from '../nav/DrawerMenu';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -27,26 +30,23 @@ function HomeStack(){
                         elevation: 0,
                     },
                     headerTintColor: '#fff',
-                    headerLeft: () => null,
+                    headerLeft: () => ( 
+                        <TouchableOpacity>
+                        <Ionicons name="menu" size={25} color="#fff" style={{ marginLeft: 15 }} />
+                    </TouchableOpacity>
+                    ),
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('NotificationsStack')}>
                             <Ionicons name="notifications" size={25} color="#fff" style={{ marginRight: 15 }} />
                         </TouchableOpacity>
                     ),
                 })}
             />
-             <Stack.Screen 
-                name="Notifications" 
-                component={Notifications} 
-                options={{
-                    headerTitle: 'Notifications',
-                    headerStyle: {
-                        backgroundColor: '#1b252d',
-                    },
-                    headerTintColor: '#fff',
-                }}
+            <Stack.Screen 
+                name="NotificationsStack" 
+                component={NotificationsStack} 
+                options={{ headerShown: false }} // Hide header as NotificationsStack handles its own header
             />
-            
         </Stack.Navigator>
     );
 }
