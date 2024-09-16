@@ -19,6 +19,9 @@ const LandingPage = ({ navigation }) => {
               <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.buttonText} >Log In</Text>
               </TouchableOpacity>
+              <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.buttonText} >Forgot Password? Press here</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </LinearGradient>

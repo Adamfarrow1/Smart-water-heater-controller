@@ -4,10 +4,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingPage from './Screens/Landing.js'; 
 import Login from './Screens/Login.js';
+import ForgotPassword from './Screens/ForgotPassword.js';
 import Register from './Screens/Register.js';
 import Homescreen from './Screens/Homescreen.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +26,7 @@ const App = () => {
            <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
            <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
            <Stack.Screen name="Home" component={LoggedinNavigator} options={{ headerShown: false }} />
+           <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
          </Stack.Navigator>
        </NavigationContainer>
     </AuthenticationContext>
