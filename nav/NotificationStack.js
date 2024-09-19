@@ -4,7 +4,7 @@ import Notifications from '../Screens/Notifications';
 
 const Stack = createStackNavigator();
 
-function NotificationsStack() {
+function NotificationStack() {
     return (
         <Stack.Navigator>
             <Stack.Screen 
@@ -22,4 +22,4 @@ function NotificationsStack() {
     );
 }
 
-export default NotificationsStack;
+export default NotificationStack;

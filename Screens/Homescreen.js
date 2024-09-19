@@ -1,37 +1,39 @@
-
-import { View, Text, StyleSheet, Pressable, ActivityIndicator  } from "react-native";
-import React from "react";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
+import { useNavigation } from '@react-navigation/native';
+/* Homescreen functionality */
+const HomeScreen = () => {
+    const { user, loading } = useUser();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [connectedDevice, setConnectedDevice] = useState(null);
+    const navigation = useNavigation();
+    
 
-
-const Homescreen = () => {
-    const { user, loading } = useUser(); 
-    if(loading){
+    if (loading) {
         return (
             <View style={styles.container}>
                 <ActivityIndicator size="large" color="#fff" />
             </View>
         );
     }
+
     return (
-      <View style={styles.container}>
-        <View style={styles.greetingContainer}>
-            <Text style={styles.greeting1}>Good afternoon,</Text>
-            <Text style={styles.greeting2}>{user.email != null ? user.email : "User"}</Text>
-        </View>
+        <View style={styles.container}>
+            <View style={styles.greetingContainer}>
+                <Text style={styles.greeting1}>Good afternoon,</Text>
+                <Text style={styles.greeting2}>{user.email != null ? user.email : "User"}</Text>
+            </View>
 
-        <View style={styles.devicesContainer}>
-        {/* make call to database to check to see if they have any devices available to there UID */}
-        {/* for now will be always assumed no devices. */}
-            <Text style={styles.noDeviceText}>No devices connected</Text>
-            <Pressable style={styles.button}>
-                <Text style={styles.buttonText} onPress={console.log(user)}>Add Device</Text>
-            </Pressable>
+            <View style={styles.devicesContainer}>
+                <Pressable style={styles.button}  onPress={() => navigation.navigate('BLEsetup')}>
+                    <Text style={styles.buttonText}>Add Device</Text>
+                </Pressable>
+            </View>
+
         </View>
-      </View>
     );
-  }
-
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
         color: "white",
         fontSize: 23
     },
-    devicesContainer:{
+    devicesContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
@@ -66,11 +68,59 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         marginLeft: 20,
         marginRight: 20,
-        
     },
     noDeviceText: {
-        color:"white"
+        color: "white"
+    },
+    deviceText: {
+        color: "black",
+        fontSize: 16,
+        marginBottom: 10
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center'
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginVertical: 10,
+        width: 250
+    },
+    buttonClose: {
+        backgroundColor: "#2196F3",
+        marginTop: 15,
+    },
+    buttonSubmit: {
+        backgroundColor: "#4CAF50",
+        marginTop: 15,
     }
 });
 
-export default Homescreen;
+export default HomeScreen;

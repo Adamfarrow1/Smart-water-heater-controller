@@ -7,6 +7,7 @@ import Login from './Screens/Login.js';
 import ForgotPassword from './Screens/ForgotPassword.js';
 import Register from './Screens/Register.js';
 import Homescreen from './Screens/Homescreen.js';
+import BLEsetup from './components/BLEsetup.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
 
@@ -27,6 +28,7 @@ const App = () => {
            <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
            <Stack.Screen name="Home" component={LoggedinNavigator} options={{ headerShown: false }} />
            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
+           <Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />
          </Stack.Navigator>
        </NavigationContainer>
     </AuthenticationContext>
