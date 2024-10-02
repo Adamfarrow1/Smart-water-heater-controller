@@ -6,7 +6,10 @@ import {
   ESPTransport,
   ESPSecurity,
 } from '@orbital-systems/react-native-esp-idf-provisioning';
-
+import ScanScreen from '../Screens/BLEsetup/ScanScreen';
+/* Uses stack navigation to guide the user through the setup.
+Instructions -> select ESP32 from list of BT devices ->
+Choose from list of wifi networks -> enter password for chosen wifi -> success/fail  */
 const BLEsetup = () => {
   const [devices, setDevices] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -67,18 +70,7 @@ const BLEsetup = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>BLE Device Scanner</Text>
-      <Button title={isScanning ? 'Scanning...' : 'Scan for Devices'} onPress={scanForDevices} disabled={isScanning} />
-      <FlatList
-        data={devices}
-        keyExtractor={(item, index) => `${item.identifier}-${index}`}
-        renderItem={({ item }) => (
-          <View style={styles.deviceItem}>
-            <Text style={styles.deviceText}>{item.name || 'Unnamed Device'}</Text>
-            <Text style={styles.deviceText}>ID: {item.identifier}</Text>
-            <Button title="Connect" onPress={() => showWifiDialog(item)} />
-          </View>
-        )}
-      />
+      <ScanScreen devices={devices} isScanning={isScanning} scanForDevices={scanForDevices} />
       <Modal
         animationType="slide"
         transparent={true}

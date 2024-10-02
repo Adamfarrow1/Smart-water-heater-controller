@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput } from "react-native";
+import { Button, View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
+import BLEsetupStack from "../nav/BLEsetupStack";
 /* Homescreen functionality */
+
+
 const HomeScreen = () => {
     const { user, loading } = useUser();
     const [modalVisible, setModalVisible] = useState(false);
@@ -26,10 +29,28 @@ const HomeScreen = () => {
             </View>
 
             <View style={styles.devicesContainer}>
-                <Pressable style={styles.button}  onPress={() => navigation.navigate('BLEsetup')}>
+                <Pressable style={styles.button}  onPress={() => setModalVisible(true)}>
                     <Text style={styles.buttonText}>Add Device</Text>
                 </Pressable>
             </View>
+
+            <Modal
+                animationType="slide"
+                transparent={true} // Make background semi-transparent
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+
+            >
+                <View style={styles.modalView}>
+                    <Text style={styles.modalTitle}>Setup</Text>
+                    
+                        
+                        <BLEsetupStack closeModal={() => setModalVisible(false)} />
+                    
+                    <Button title="Submit" onPress={() => { setModalVisible(false); }} />
+                    <Button title="Cancel" onPress={() => setModalVisible(false)} />
+                </View>
+            </Modal>
 
         </View>
     );
@@ -38,6 +59,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        padding: 20,
         backgroundColor: "#1b252d"
     },
     greetingContainer: {
@@ -79,25 +101,20 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center', // Center the modal content
+        alignItems: 'center', // Center the modal content
+        backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
     },
     modalView: {
-        margin: 20,
-        backgroundColor: "white",
+        
+        position: 'absolute',
+        width: '80%',
+        height: '60%', // Set a height to ensure it doesn't take full screen
+        backgroundColor: 'white',
         borderRadius: 20,
-        padding: 35,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5
+        padding: 20,
     },
+
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -119,7 +136,7 @@ const styles = StyleSheet.create({
     },
     buttonSubmit: {
         backgroundColor: "#4CAF50",
-        marginTop: 15,
+        
     }
 });
 
