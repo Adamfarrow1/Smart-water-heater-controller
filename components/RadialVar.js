@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { RadialSlider } from 'react-native-radial-slider';
 
-const RadialVariant = () => {
-  const [speed, setSpeed] = useState(0);
-
+const RadialVariant = ({ speed, setSpeed }) => {
   return (
     <View style={styles.container}>
       <RadialSlider 
@@ -31,7 +29,6 @@ const RadialVariant = () => {
             { offset: '100%', color: '#ff2c2c' }
           ]}
       />
-      
     </View>
   );
 };
@@ -42,17 +39,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#1b252d',
-    color: '#FFFFFF'
+    color: '#FFFFFF',
   },
   centerContentStyle: {
-    paddingTop: 80,  // General padding around the content
-    justifyContent: 'center',  // Center the content
-    alignItems: 'center',      // Center the content
-    
+    paddingTop: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
   }, 
   titleStyle: {
     color: '#FFFFFF', 
-    fontSize: '25',
+    fontSize: 25,
   },
   unitStyle: {
     color: '#FFFFFF',
@@ -64,6 +60,6 @@ const styles = StyleSheet.create({
     fontSize: 50,       
     textAlign: 'center',
   },
-  
 });
+
 export default RadialVariant;

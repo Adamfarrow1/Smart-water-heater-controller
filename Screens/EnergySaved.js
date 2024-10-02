@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import Tips from './Carousel';
-
+import { getDatabase, ref, onValue } from "firebase/database";
 function EnergySaved() {
   const [data, setData] = useState([60, 60, 60, 60, 60, 60]);
 
-  const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-  const updateData = () => {
-    const newData = data.map(() => getRandomNumber(57, 63));
-    setData(newData);
-  };
+  useEffect(() => {
+    const db = getDatabase();
+    const deviceref = ref(db, 'controllers/device_002');
+    onValue(deviceref, (snapshot) => {
+      const data = snapshot.val();
+      setData(data.frequency);
+    });
+  
+    return;
+  }, []);
+  
 
   return (
     <View style={styles.container}>
-          <Text style={styles.text}>Device Selected:</Text>
-          <Text style={styles.deviceName}>Home device</Text>
+      <Text style={styles.text}>Device Selected:</Text>
+      <Text style={styles.deviceName}>Home device</Text>
       <Text style={styles.text}>Frequencies:</Text>
-      <TouchableOpacity style={styles.chartContainer} onPress={updateData}>
-        
+      <TouchableOpacity style={styles.chartContainer}>
         <LineChart
           data={{
-            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
             datasets: [{ data }],
           }}
           width={Dimensions.get('window').width - 40}
@@ -30,7 +34,6 @@ function EnergySaved() {
           yAxisMax={70}
           yAxisMin={50}
           yAxisSuffix="hz"
-          yAxisInterval={1}
           chartConfig={{
             backgroundColor: '#22303c',
             backgroundGradientFrom: '#22303c',
@@ -44,9 +47,9 @@ function EnergySaved() {
           style={styles.chart}
         />
       </TouchableOpacity>
-      
+
       <View style={styles.tipsContainer}>
-      <Text style={styles.text}>Tips:</Text>
+        <Text style={styles.text}>Tips:</Text>
         <Tips />
       </View>
     </View>
@@ -54,7 +57,7 @@ function EnergySaved() {
 }
 
 const styles = StyleSheet.create({
-  text:{
+  text: {
     fontSize: 13,
     marginTop: 50,
     alignSelf: 'left',
@@ -66,7 +69,7 @@ const styles = StyleSheet.create({
     fontSize: 23,
     alignSelf: 'left',
     marginLeft: 20,
-},
+  },
   container: {
     flex: 1,
     backgroundColor: "#1b252d",
