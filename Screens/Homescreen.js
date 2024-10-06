@@ -25,7 +25,7 @@ const HomeScreen = () => {
         <View style={styles.container}>
             <View style={styles.greetingContainer}>
                 <Text style={styles.greeting1}>Good afternoon,</Text>
-                <Text style={styles.greeting2}>{user.email != null ? user.email : "User"}</Text>
+                <Text style={styles.greeting2}>{user.displayName != null ? user.displayName : "User"}</Text>
             </View>
 
             <View style={styles.devicesContainer}>

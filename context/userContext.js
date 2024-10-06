@@ -34,7 +34,7 @@ export const AuthenticationContext = ({ children }) => {
 
   // we must return our context within this form.
   return (
-    <UserContext.Provider value={{ user, loading }}>
+    <UserContext.Provider value={{ user, loading, setUser }}>
       {children}
     </UserContext.Provider>
   );

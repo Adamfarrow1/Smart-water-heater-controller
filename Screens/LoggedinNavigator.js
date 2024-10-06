@@ -8,7 +8,6 @@ import TempControl from './TempControl';
 import EnergySaved from './EnergySaved';
 import Schedule from './Schedule';
 
-
 const Tab = createBottomTabNavigator();
 
 function Home() {

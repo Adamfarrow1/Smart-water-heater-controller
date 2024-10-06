@@ -1,21 +1,53 @@
 import { StyleSheet, Text, View, Button, TextInput, Pressable } from 'react-native';
 import React, { useState } from 'react';
 import {auth,  createUserWithEmailAndPassword } from '../context/firebaseConfig';
-import { useUser } from '../context/userContext';
-export default function Register() {
+import { getDatabase, ref, set } from "firebase/database";
+import { updateProfile } from "firebase/auth";
+export default function Register({ navigation }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
+  const [name, setName] = useState('');
   const [zip, setZip] = useState('');
-  const { user } = useUser();
+  const [error, setError] = useState('');
 
   const handleRegister = async () => {
+    setError('');
+    if (password !== repassword) {
+      setError("Passwords do not match");
+      return;
+    }
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user; 
+
+      await updateProfile(user, {
+        displayName: name,         
+      });
+      const db = getDatabase();
+      set(ref(db, 'users/' + user.uid), {
+        username: name,
+        email: email,
+        zip: zip,
+
+      });
+
+      navigation.navigate("Home")
+
+
+
       console.log("it works")
     } catch (error) {
-      console.log("it doe snot work")
+      if (error.code === 'auth/invalid-email') {
+        setError('Invalid email');
+      } else if (error.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setError('Email is already in use');
+      } else {
+        setError('Registration failed. Please try again');
+      }
       console.log(error);
     }
   };
@@ -26,10 +58,13 @@ export default function Register() {
       <Text style={styles.title}>Register</Text>
       <View style={styles.formContainer}>
         <Text style={styles.subtitle}>Enter your email and password</Text>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder='Name' placeholderTextColor="#aaa" />
         <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder='Email' placeholderTextColor="#aaa" />
-        <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder='Password' secureTextEntry={true} placeholderTextColor="#aaa" />
+        <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder='Password' secureTextEntry={true} placeholderTextColor="#aaa" /> 
         <TextInput style={styles.input} value={repassword} onChangeText={setRepassword} placeholder='Re-enter Password' secureTextEntry={true} placeholderTextColor="#aaa" />
-        <TextInput style={styles.input} value={zip} onChangeText={setZip} placeholder='Zip code' secureTextEntry={true} placeholderTextColor="#aaa" />
+        <TextInput style={styles.input} value={zip} onChangeText={setZip} placeholder='Zip code' placeholderTextColor="#aaa" />
+       
         <Pressable style={styles.button}  onPress={handleRegister}>
           <Text style={styles.buttonText}>Register</Text>
         </Pressable>
@@ -54,6 +89,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  errorText:{
+    color: 'red',
+    padding: 10
   },
   breaker_text:{
     marginHorizontal: 10,
