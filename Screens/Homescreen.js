@@ -29,7 +29,7 @@ const HomeScreen = () => {
             </View>
 
             <View style={styles.devicesContainer}>
-                <Pressable style={styles.button}  onPress={() => setModalVisible(true)}>
+            <Pressable style={styles.button}   onPress={() => navigation.navigate("BLEdemo")}>
                     <Text style={styles.buttonText}>Add Device</Text>
                 </Pressable>
             </View>

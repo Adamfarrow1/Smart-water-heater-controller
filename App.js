@@ -10,7 +10,7 @@ import Homescreen from './Screens/Homescreen.js';
 import BLEsetup from './components/BLEsetup.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
-
+import BLEdemo from './Screens/BLEdemo.js';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -28,7 +28,8 @@ const App = () => {
            <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
            <Stack.Screen name="Home" component={LoggedinNavigator} options={{ headerShown: false,gestureEnabled: false }} />
            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
-           <Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />
+           {/*<Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />*/}
+           <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
          </Stack.Navigator>
        </NavigationContainer>
     </AuthenticationContext>
