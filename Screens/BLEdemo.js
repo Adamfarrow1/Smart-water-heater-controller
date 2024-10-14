@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Alert, Button, Modal, TextInput, StyleSheet, FlatList } from 'react-native';
 import {
   ESPProvisionManager,
@@ -7,6 +7,8 @@ import {
   ESPSecurity,
 } from '@orbital-systems/react-native-esp-idf-provisioning';
 import { useUser } from "../context/userContext";
+import { getDatabase, ref, onValue, update, database } from 'firebase/database';
+import axios from 'axios';
 
 const BLEdemo = () => {
   const { user, loading } = useUser();
@@ -16,11 +18,14 @@ const BLEdemo = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
+  const [userDevices, setUserDevices] = useState({});
+    // Reference to the user's devices in Firebase RTDB
+    const db = getDatabase();
 
   const scanForDevices = async () => {
     try {
       setIsScanning(true);
-      const prefix = '';
+      const prefix = 'PROV';
       const transport = ESPTransport.ble;
       const security = ESPSecurity.secure2;
 
@@ -47,16 +52,51 @@ const BLEdemo = () => {
       console.log("trying to connect");
       await selectedDevice.connect("abcd1234");
       console.log(ssid + " " + password);
+
       await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
 
+      // Add user.uid to the payload
       await selectedDevice.disconnect();
+      const uid = user?.uid;
+      console.log("Sending UID to ESP32:", uid);
+      await sendUIDToESP32(uid);
     } catch (error) {
       console.error(error);
       Alert.alert('Error', `Failed to provision device: ${error.message}`);
     }
   };
 
+
+const sendUIDToESP32 = async (uid) => {
+  const data = {
+    uid: uid,
+  };
+  try {
+      const response = await fetch(`http://esp32.local/receiveUID`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json', // Change to application/json
+          },
+          body: JSON.stringify(data), // Use JSON.stringify to send JSON data
+      });
+
+      if (response.ok) {
+          const responseBody = await response.json(); // Parse the JSON response
+          console.log("Response from ESP32:", responseBody);
+      } else {
+          console.error("Failed to send UID. Status:", response.status);
+      }
+  } catch (error) {
+      console.error("Error sending UID to ESP32:", error);
+  }
+};
+
+
+
+
+
+  
   const showWifiDialog = (device) => {
     setSelectedDevice(device);
     setModalVisible(true);
