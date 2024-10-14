@@ -68,29 +68,33 @@ const BLEdemo = () => {
   };
 
 
-const sendUIDToESP32 = async (uid) => {
-  const data = {
-    uid: uid,
-  };
-  try {
-      const response = await fetch(`http://esp32.local/receiveUID`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json', // Change to application/json
-          },
-          body: JSON.stringify(data), // Use JSON.stringify to send JSON data
-      });
+  const sendUIDToESP32 = async (uid) => {
+    const data = { uid: uid };
+    try {
+        const response = await fetch(`http://esp32.local/receiveUID`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
 
-      if (response.ok) {
-          const responseBody = await response.json(); // Parse the JSON response
-          console.log("Response from ESP32:", responseBody);
-      } else {
-          console.error("Failed to send UID. Status:", response.status);
-      }
-  } catch (error) {
-      console.error("Error sending UID to ESP32:", error);
-  }
+        // Log the raw response for debugging
+        const responseText = await response.text(); // Get the raw response text
+        console.log("Raw response from ESP32:", responseText); // Log raw response
+
+        if (response.ok) {
+            const responseBody = JSON.parse(responseText); // Parse the JSON response
+            console.log("Response from ESP32:", responseBody);
+        } else {
+            console.error("Failed to send UID. Status:", response.status);
+        }
+    } catch (error) {
+        console.error("Error sending UID to ESP32:", error);
+    }
 };
+
+  
 
 
 
