@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
+import { getDatabase, ref, onValue } from "firebase/database";
 /* Homescreen functionality */
 
 
@@ -10,8 +11,36 @@ const HomeScreen = () => {
     const { user, loading } = useUser();
     const [modalVisible, setModalVisible] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
+    const [devices, setDevices] = useState([]);
     const navigation = useNavigation();
     
+useEffect(() => {
+    if (user && user.uid) {
+        const db = getDatabase();
+        const devicesRef = ref(db, `users/${user.uid}/devices`); // Reference to the devices path
+        console.log(devicesRef);
+        // Listen for changes to the devices
+        const unsubscribe = onValue(devicesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Convert the object of devices into an array
+                const devicesArray = Object.entries(data).map(([key, value]) => ({
+                    id: key, // unique ID of the device
+                    ...value, // other device data
+                }));
+                setDevices(devicesArray); // Update state with the devices array
+                console.log(devices);
+
+            } else {
+                setDevices([]); // Clear devices if no data
+            }
+        });
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }
+}, [user]);
+
 
     if (loading) {
         return (
@@ -29,7 +58,20 @@ const HomeScreen = () => {
             </View>
 
             <View style={styles.devicesContainer}>
-            <Pressable style={styles.button}   onPress={() => navigation.navigate("BLEdemo")}>
+                <Text style={styles.deviceText}>Your Devices:</Text>
+                <FlatList
+                    data={devices}
+                    renderItem={({ item }) => (
+                        <View style={styles.deviceItem}>
+                            <Text style={styles.deviceText}>
+                                {item.id ? item.id : "Unknown Device"}
+                            </Text>
+                        </View>
+                    )}
+                    keyExtractor={(item) => item.id || Math.random().toString()} // Use random key as fallback
+                    ListEmptyComponent={<Text style={styles.noDeviceText}>No devices found.</Text>} // Message when no devices
+                />
+                <Pressable style={styles.button}   onPress={() => navigation.navigate("BLEdemo")}>
                     <Text style={styles.buttonText}>Add Device</Text>
                 </Pressable>
             </View>
@@ -137,7 +179,8 @@ const styles = StyleSheet.create({
     buttonSubmit: {
         backgroundColor: "#4CAF50",
         
-    }
+    },
+
 });
 
 export default HomeScreen;
