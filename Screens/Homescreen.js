@@ -1,16 +1,19 @@
 import { Button, View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput } from "react-native";
+import DropDownPicker from 'react-native-dropdown-picker';
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
 import { getDatabase, ref, onValue } from "firebase/database";
-/* Homescreen functionality */
 
+/* Homescreen functionality */
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
+    const [open, setOpen] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
+    const [selectedDevice, setSelectedDevice] = useState(null);
     const [devices, setDevices] = useState([]);
     const navigation = useNavigation();
     
@@ -25,11 +28,10 @@ useEffect(() => {
             if (data) {
                 // Convert the object of devices into an array
                 const devicesArray = Object.entries(data).map(([key, value]) => ({
-                    id: key, // unique ID of the device
-                    ...value, // other device data
+                    label: value.name || `Device ${key}`, // Use device name or fallback
+                    value: key, // unique ID of the device
                 }));
                 setDevices(devicesArray); // Update state with the devices array
-                console.log(devices);
 
             } else {
                 setDevices([]); // Clear devices if no data
@@ -58,23 +60,26 @@ useEffect(() => {
             </View>
 
             <View style={styles.devicesContainer}>
-                <Text style={styles.deviceText}>Your Devices:</Text>
-                <FlatList
-                    data={devices}
-                    renderItem={({ item }) => (
-                        <View style={styles.deviceItem}>
-                            <Text style={styles.deviceText}>
-                                {item.id ? item.id : "Unknown Device"}
-                            </Text>
-                        </View>
-                    )}
-                    keyExtractor={(item) => item.id || Math.random().toString()} // Use random key as fallback
-                    ListEmptyComponent={<Text style={styles.noDeviceText}>No devices found.</Text>} // Message when no devices
+            <Text style={styles.text}>Device Selected: {devices.find(device => device.value === selectedDevice)?.label || "Select a device"}</Text>
+                <DropDownPicker
+                    open={open}
+                    value={selectedDevice}
+                    items={devices} // Array of devices for the dropdown
+                    setOpen={setOpen}
+                    setValue={setSelectedDevice}
+                    placeholder={'Select a device'}
+                    containerStyle={{ height: 40 }}
+                    style={{ backgroundColor: '#fafafa' }}
+                    dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
+                    // Key prop for the picker items
+                    keyExtractor={item => item.id} // Ensure each item has a unique key
                 />
                 <Pressable style={styles.button}   onPress={() => navigation.navigate("BLEdemo")}>
                     <Text style={styles.buttonText}>Add Device</Text>
                 </Pressable>
+               
             </View>
+            
 
             <Modal
                 animationType="slide"
@@ -117,9 +122,11 @@ const styles = StyleSheet.create({
         fontSize: 23
     },
     devicesContainer: {
-        flex: 1,
+
         justifyContent: 'center',
         alignItems: 'center',
+        padding: 30,
+        marginBottom: 100,
     },
     button: {
         backgroundColor: "white",
@@ -180,6 +187,13 @@ const styles = StyleSheet.create({
         backgroundColor: "#4CAF50",
         
     },
+    text:{
+        fontSize: 15,
+        alignSelf: 'left',
+        marginLeft: 20,
+        color: 'white',
+        fontWeight: '600'
+      }
 
 });
 
