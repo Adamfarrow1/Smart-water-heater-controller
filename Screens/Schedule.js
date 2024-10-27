@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 
@@ -11,7 +11,7 @@ function Schedule() {
   const [selectedDay, setSelectedDay] = useState(currentDate);
   const [isCalendarOpen, setIsCalendarOpen] = useState(true);
   const [items, setItems] = useState({
-    '2024-08-24': [{ name: 'Sample task for 25th' }],
+    '2024-08-24': [{ name: 'Sample task for 24th' }],
     '2024-08-26': [{ name: 'Sample task for 26th' }],
   });
 
@@ -26,10 +26,16 @@ function Schedule() {
     </View>
   );
 
+  // This function will be called when no items exist for a selected day
+  const renderEmptyData = () => (
+    <View style={styles.emptyItem}>
+      <Text style={styles.emptyItemText}>No scheduled tasks found</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Agenda
-      
         items={items}
         loadItemsForMonth={(month) => {
           console.log('trigger items loading');
@@ -42,6 +48,7 @@ function Schedule() {
           [selectedDay]: { selected: true, marked: true, dots: [work, massage, workout] },
         }}
         renderItem={renderItem}
+        renderEmptyData={renderEmptyData}  // Renders when no data is available
         theme={{
           backgroundColor: "#1b252d",
           calendarBackground: '#1b252d',
@@ -84,6 +91,16 @@ const styles = StyleSheet.create({
   },
   itemText: {
     color: '#1b252d',
+  },
+  emptyItem: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 30,
+  },
+  emptyItemText: {
+    color: '#b6c1cd',
+    fontSize: 16,
   },
 });
 
