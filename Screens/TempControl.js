@@ -6,7 +6,7 @@ import { getDatabase, ref, onValue,update  } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 
 function TempControl() {
-  const { selectedDevice } = useDevice(); 
+  const { selectedDevice, deviceInfo } = useDevice(); 
   const [data, setData] = useState(0);
   const [speed, setSpeed] = useState(120);
   useEffect(() => {
@@ -16,6 +16,8 @@ function TempControl() {
       const data = snapshot.val();
       setData(data.temperature);
       setSpeed(data.temperature)
+      console.log(deviceInfo);
+      console.log(selectedDevice);
     });
 
     console.log("runnin")

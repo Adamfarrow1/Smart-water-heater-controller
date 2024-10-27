@@ -11,7 +11,7 @@ import { useDevice } from '../context/DeviceContext';
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
-    const { selectedDevice, setSelectedDevice } = useDevice();
+    const { selectedDevice, setSelectedDevice, setDeviceInfo } = useDevice();
     const [open, setOpen] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
@@ -69,7 +69,9 @@ useEffect(() => {
                     items={devices} // Array of devices for the dropdown
                     setOpen={setOpen}
                     setValue={(value) => {
+                        const selected = devices.find(device => device.value === value);
                         setSelectedDevice(value); // Update selected device in context
+                        setDeviceInfo(selected); // Set the selected device's info in context
                     }}
                     placeholder={'Select a device'}
                     containerStyle={{ height: 40 }}
