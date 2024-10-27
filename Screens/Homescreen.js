@@ -5,15 +5,17 @@ import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
 import { getDatabase, ref, onValue } from "firebase/database";
-
+import { useDevice } from '../context/DeviceContext';
 /* Homescreen functionality */
+
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
+    const { selectedDevice, setSelectedDevice } = useDevice();
     const [open, setOpen] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
-    const [selectedDevice, setSelectedDevice] = useState(null);
+ //  const [selectedDevice, setSelectedDevice] = useState(null);
     const [devices, setDevices] = useState([]);
     const navigation = useNavigation();
     
@@ -66,7 +68,9 @@ useEffect(() => {
                     value={selectedDevice}
                     items={devices} // Array of devices for the dropdown
                     setOpen={setOpen}
-                    setValue={setSelectedDevice}
+                    setValue={(value) => {
+                        setSelectedDevice(value); // Update selected device in context
+                    }}
                     placeholder={'Select a device'}
                     containerStyle={{ height: 40 }}
                     style={{ backgroundColor: '#fafafa' }}

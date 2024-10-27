@@ -10,7 +10,7 @@ import Homescreen from './Screens/Homescreen.js';
 import BLEsetup from './components/BLEsetup.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
-//import { DeviceProvider } from './context/DeviceContext';
+import { DeviceProvider } from './context/DeviceContext';
 import BLEdemo from './Screens/BLEdemo.js';
 const Stack = createNativeStackNavigator();
 
@@ -21,7 +21,7 @@ const App = () => {
       {/* <NavigationContainer>
       <LoggedinNavigator></LoggedinNavigator>
       </NavigationContainer> */}
-
+    <DeviceProvider>
        <NavigationContainer>
        
          <Stack.Navigator initialRouteName="Landing">
@@ -34,6 +34,7 @@ const App = () => {
            <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
          </Stack.Navigator>
        </NavigationContainer>
+       </DeviceProvider>
     </AuthenticationContext>
   );
 };

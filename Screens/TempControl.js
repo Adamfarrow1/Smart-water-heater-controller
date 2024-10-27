@@ -3,8 +3,10 @@ import { View, StyleSheet, Text, Pressable} from 'react-native';
 import RadialVariant from '../components/RadialVar';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue,update  } from "firebase/database";
+import { useDevice } from '../context/DeviceContext';
 
 function TempControl() {
+  const { selectedDevice } = useDevice(); 
   const [data, setData] = useState(0);
   const [speed, setSpeed] = useState(120);
   useEffect(() => {
@@ -40,7 +42,7 @@ function TempControl() {
       <View style={styles.container}>
         
         <Text style={styles.text}>Device Selected:</Text>
-        <Text style={styles.deviceName}>Home device</Text>
+        <Text style={styles.deviceName}>{selectedDevice || "No Device Selected"}</Text>
         <Text style={styles.text}>Current Temp: {data}</Text>
         <Pressable style={styles.btnPressable } onPress={changeTemp}  >
           <Text style={styles.btnText}>Set Temp</Text>
