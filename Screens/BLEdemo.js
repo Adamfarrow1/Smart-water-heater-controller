@@ -19,13 +19,12 @@ const BLEdemo = () => {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [userDevices, setUserDevices] = useState({});
-    // Reference to the user's devices in Firebase RTDB
-    const db = getDatabase();
+
 
   const scanForDevices = async () => {
     try {
       setIsScanning(true);
-      const prefix = 'PROV';
+      const prefix = '';
       const transport = ESPTransport.ble;
       const security = ESPSecurity.secure2;
 
@@ -93,12 +92,6 @@ const BLEdemo = () => {
         console.error("Error sending UID to ESP32:", error);
     }
 };
-
-  
-
-
-
-
 
   
   const showWifiDialog = (device) => {

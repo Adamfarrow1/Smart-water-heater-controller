@@ -80,7 +80,7 @@ useEffect(() => {
                     // Key prop for the picker items
                     keyExtractor={item => item.id} // Ensure each item has a unique key
                 />
-                <Pressable style={styles.button}   onPress={() => navigation.navigate("BLEdemo")}>
+                <Pressable style={styles.button}   onPress={() => navigation.navigate("SetupOptions")}>
                     <Text style={styles.buttonText}>Add Device</Text>
                 </Pressable>
                
