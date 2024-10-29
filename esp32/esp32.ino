@@ -240,20 +240,31 @@ void SysProvEvent(arduino_event_t *sys_event) {
    
     break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED: 
-      Serial.println("CONNECTED BITCHHHH"); 
+      Serial.println("CONNECTED."); 
       Serial.println(deviceId); 
       if (MDNS.begin("esp32")) 
       {  // "esp32" is the hostname
         Serial.println("mDNS responder started");
-       }
-            // Set up the server to handle UID requests
-            server.on("/receiveUID", HTTP_POST, handleReceiveUID);
-            server.begin(); // Start the server
-     // ble.begin("ESP32 SimpleBLE");
-      advertiseBLE();
+      }
+       // Set up the server to handle UID requests
+      server.on("/receiveUID", HTTP_POST, handleReceiveUID);
+      server.begin(); // Start the server
+      delay(500);
+     advertiseBLE();
       break;
     default:                              break;
   }
+}
+
+void advertiseBLE() {
+    static bool isAdvertising = false;
+
+    if (!isAdvertising) {
+        String bleName = "ESP32_SimpleBLE"; // Set your desired name here
+        ble.begin(bleName); // Convert to const char* if necessary
+        Serial.println("BLE Advertising started with name: " + bleName);
+        isAdvertising = true;
+    }
 }
 
 void printWiFiStatus() {
@@ -289,16 +300,7 @@ void printWiFiStatus() {
       break;
   }
 }
-void advertiseBLE() {
-    static bool isAdvertising = false;
 
-    if (!isAdvertising) {
-        String bleName = "ESP32_SimpleBLE"; // Set your desired name here
-        ble.begin(bleName.c_str()); // Convert to const char* if necessary
-        Serial.println("BLE Advertising started with name: " + bleName);
-        isAdvertising = true;
-    }
-}
 
 //Update to only add the device's UID to the user's devices array.
 void intializeFirebase() {
@@ -316,13 +318,13 @@ void intializeFirebase() {
     if(deviceId.isEmpty())
     {
       deviceId = auth.token.uid.c_str();  // Get the UID from the token
-            json.set("deviceID", deviceId); // Store device ID in JSON
-            Serial.println("Device authenticated.. Device ID is: " + deviceId);
+      json.set("deviceID", deviceId); // Store device ID in JSON
+      Serial.println("Device authenticated.. Device ID is: " + deviceId);
             
-            
-            preferences.begin("device", false);
-            preferences.putString("deviceId", deviceId); // Save deviceId persistently
-            preferences.end();
+       // Save deviceId in persistent storage
+      preferences.begin("device", false);
+      preferences.putString("deviceId", deviceId); 
+      preferences.end();
     }
     //json.set("deviceID", deviceId); 
    // Serial.println("Device authenticated.. Device ID is: "+ deviceId);
@@ -334,7 +336,6 @@ void intializeFirebase() {
   config.token_status_callback = tokenStatusCallback; // see addons/TokenHelper.h
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
-  Serial.println(auth.token.claims.c_str());
   
 }
 
@@ -371,6 +372,7 @@ void handleReceiveUID() {
                 DynamicJsonDocument doc(1024);
                 doc["status"] = "success";
                 doc["message"] = "UID received successfully"; // Add a message field
+                doc["deviceId"] = deviceId;
                 String response;
                 serializeJson(doc, response);
                 server.send(200, "application/json", response); // Send valid JSON response
@@ -397,6 +399,24 @@ void addDeviceToUserDevices() {
     }
 }
 
+void checkDeviceExists(String uid, String deviceId) {
+    String userDevicesPath = "users/" + uid + "/devices/" + deviceId;
+    
+    // Query the database to check if the deviceId already exists
+    if (Firebase.RTDB.getString(&fbdo, userDevicesPath)) {
+        // If the deviceId exists, skip adding it again
+        Serial.println(Firebase.RTDB.getString(&fbdo, userDevicesPath));
+        if (fbdo.dataPath() == userDevicesPath) {
+            Serial.println("Device ID already exists in the user's devices.");
+            return; // Device already exists
+        }
+    } else {
+        Serial.printf("Failed to check device existence: %s\n", fbdo.errorReason().c_str());
+    }
+
+    // If deviceId does not exist, call addDeviceToUserDevices
+    addDeviceToUserDevices();
+}
 
 void sendSensorDataToFirebase(float frequency, float temperature) {
     String devicePath = "controllers/" + deviceId;
@@ -434,7 +454,7 @@ void sendSensorDataToFirebase(float frequency, float temperature) {
 
 void setup() {
   Serial.begin(115200);
- // isProvisioned = true;
+  isProvisioned = true;
   randomSeed(analogRead(0)); // Initialize random seed
   pinMode(RELAY_PIN, OUTPUT); // Set the relay pin as an output
   digitalWrite(RELAY_PIN, HIGH); // Set the relay to HIGH (off)
@@ -500,9 +520,9 @@ void loop() {
         intializeFirebase();
       }
         
-      else if(isUIDobtained == true)
+      else if(isUIDobtained == true )
       {
-        addDeviceToUserDevices();
+        checkDeviceExists(uid, deviceId);
       }  
         
          // Configure time

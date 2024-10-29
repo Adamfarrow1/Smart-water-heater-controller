@@ -6,8 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
-/* Homescreen functionality */
-
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
@@ -22,21 +20,19 @@ const HomeScreen = () => {
 useEffect(() => {
     if (user && user.uid) {
         const db = getDatabase();
-        const devicesRef = ref(db, `users/${user.uid}/devices`); // Reference to the devices path
-        console.log(devicesRef);
+        const devicesRef = ref(db, `users/${user.uid}/devices`);
         // Listen for changes to the devices
         const unsubscribe = onValue(devicesRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Convert the object of devices into an array
                 const devicesArray = Object.entries(data).map(([key, value]) => ({
-                    label: value.name || `Device ${key}`, // Use device name or fallback
-                    value: key, // unique ID of the device
+                    label: value.name || `Device ${key}`, // Use device name or deviceId
+                    value: key, // deviceId
                 }));
-                setDevices(devicesArray); // Update state with the devices array
+                setDevices(devicesArray);
 
             } else {
-                setDevices([]); // Clear devices if no data
+                setDevices([]); 
             }
         });
 
@@ -66,7 +62,7 @@ useEffect(() => {
                 <DropDownPicker
                     open={open}
                     value={selectedDevice}
-                    items={devices} // Array of devices for the dropdown
+                    items={devices}
                     setOpen={setOpen}
                     setValue={(value) => {
                         const selected = devices.find(device => device.value === value);
@@ -156,15 +152,15 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        justifyContent: 'center', // Center the modal content
-        alignItems: 'center', // Center the modal content
-        backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        backgroundColor: 'rgba(0,0,0,0.5)', 
     },
     modalView: {
         
         position: 'absolute',
         width: '80%',
-        height: '60%', // Set a height to ensure it doesn't take full screen
+        height: '60%',
         backgroundColor: 'white',
         borderRadius: 20,
         padding: 20,

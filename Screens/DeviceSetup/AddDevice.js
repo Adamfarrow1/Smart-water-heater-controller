@@ -8,14 +8,15 @@ import {
 } from '@orbital-systems/react-native-esp-idf-provisioning';
 import { useUser } from '../../context/userContext';
 import { getDatabase, ref, onValue, update, database } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 
 const AddDevice = () => {
-
     const { user, loading } = useUser();
     const [devices, setDevices] = useState([]);
     const [isScanning, setIsScanning] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const navigation = useNavigation(); 
 
     const scanForDevices = async () => {
         try {
@@ -29,7 +30,7 @@ const AddDevice = () => {
           if (foundDevices.length === 0) {
             Alert.alert('No Devices Found', 'No BLE devices found.');
           } else {
-            console.log('Found devices:', foundDevices);
+          //  console.log('Found devices:', foundDevices);
             setDevices(foundDevices);
           }
         } catch (error) {
@@ -40,7 +41,7 @@ const AddDevice = () => {
         }
       };
 
-       const connectToDevice = async () => {
+    const connectToDevice = async () => {
     if (!selectedDevice) return;
 
       // Add user.uid to the payload
@@ -68,6 +69,9 @@ const AddDevice = () => {
             if (response.ok) {
                 const responseBody = JSON.parse(responseText); // Parse the JSON response
                 console.log("Response from ESP32:", responseBody);
+                // Navigate back to Home Screen after successful connection
+                const deviceId = responseBody.deviceId;
+                navigation.navigate('DeviceInfo', { deviceId: deviceId});
             } else {
                 console.error("Failed to send UID. Status:", response.status);
             }
@@ -139,7 +143,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'white',
         padding: 20,
       },
       modalTitle: {

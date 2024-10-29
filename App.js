@@ -14,6 +14,7 @@ import { DeviceProvider } from './context/DeviceContext';
 import BLEdemo from './Screens/BLEdemo.js';
 import AddDevice from './Screens/DeviceSetup/AddDevice.js';
 import SetupOptions from './Screens/DeviceSetup/SetupOptions.js';
+import DeviceInfo from './Screens/DeviceSetup/DeviceInfo.js';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -35,6 +36,7 @@ const App = () => {
            {/*<Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />*/}
            <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
            <Stack.Screen name="AddDevice" component={AddDevice} options={{title: 'Add Device' }} />
+           <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{title: 'Device info' }} />
            <Stack.Screen name="SetupOptions" component={SetupOptions} options={{title: 'Setup Options' }} />
          </Stack.Navigator>
        </NavigationContainer>
