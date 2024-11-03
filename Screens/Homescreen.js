@@ -1,4 +1,4 @@
-import { Button, View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput, TouchableOpacity, Switch } from "react-native";
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput, TouchableOpacity, Switch } from "react-native";
 import DropDownPicker from 'react-native-dropdown-picker';
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
 import { getDatabase, ref, onValue, set } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
+import { Ionicons, FontAwesome } from "@expo/vector-icons";
+
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
@@ -14,6 +16,7 @@ const HomeScreen = () => {
     const [connectedDevice, setConnectedDevice] = useState(null);
     const [batteryPercentage, setBatteryPercentage] = useState(null);
     const [controllerStatus, setControllerStatus] = useState(null);
+    const [gridStatus, setGridStatus] = useState(null);
     const [devices, setDevices] = useState([]);
     const navigation = useNavigation();
     const toggleSwitch = () => setControllerStatus(previousState => !previousState);
@@ -42,26 +45,25 @@ useEffect(() => {
     }
 }, [user]);
 
-useEffect(() => {
-    if (selectedDevice) {
-        const db = getDatabase();
-        const statusRef = ref(db, `controllers/${selectedDevice}/status`);
-        const unsubscribeStatus = onValue(statusRef, (snapshot) => {
-            setControllerStatus(snapshot.val());
-        });
+    useEffect(() => {
+        if (selectedDevice) {
+            const db = getDatabase();
+            const statusRef = ref(db, `controllers/${selectedDevice}/status`);
+            const gridStatusRef = ref(db, `controllers/${selectedDevice}/gridStatus`); // Firebase path for grid status
+            const batteryRef = ref(db, `controllers/${selectedDevice}/battery`);
+            
+            // Listen for status and gridStatus updates
+            const unsubscribeStatus = onValue(statusRef, (snapshot) => setControllerStatus(snapshot.val()));
+            const unsubscribeGridStatus = onValue(gridStatusRef, (snapshot) => setGridStatus(snapshot.val()));  // Update grid status
+            const unsubscribeBattery = onValue(batteryRef, (snapshot) => setBatteryPercentage(snapshot.val()));
 
-        // Listen for battery percentage if the device is on
-        const batteryRef = ref(db, `controllers/${selectedDevice}/battery`);
-        const unsubscribeBattery = onValue(batteryRef, (snapshot) => {
-            setBatteryPercentage(snapshot.val());
-        });
-
-        return () => {
-            unsubscribeStatus();
-            unsubscribeBattery();
-        };
-    }
-}, [selectedDevice]);
+            return () => {
+                unsubscribeStatus();
+                unsubscribeGridStatus();
+                unsubscribeBattery();
+            };
+        }
+    }, [selectedDevice]);
 
     const toggleController = () => {
         if (selectedDevice) {
@@ -69,6 +71,25 @@ useEffect(() => {
             const statusRef = ref(db, `controllers/${selectedDevice}/status`);
             set(statusRef, !controllerStatus);  // Toggle the current status
         }
+    };
+
+    const getControllerStatusText = () => {
+        if (controllerStatus && gridStatus) {
+            return "Controller is ON";
+        } else if (!controllerStatus) {
+            return "Standby: Controller is OFF";
+        } else if (controllerStatus && !gridStatus) {
+            return "Standby: Grid Condition - Controller is OFF";
+        }
+        return "Unknown Status";
+    };
+
+    const getBatteryIcon = () => {
+        if (batteryPercentage >= 75) return "battery-full";
+        if (batteryPercentage >= 50) return "battery-three-quarters";
+        if (batteryPercentage > 25) return "battery-half";
+        if (batteryPercentage > 0) return "battery-quarter";
+        return "battery-empty";
     };
 
 
@@ -105,35 +126,37 @@ useEffect(() => {
                     dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
                     keyExtractor={item => item.id} // Ensure each item has a unique key
                 />
-                <Pressable style={styles.button}   onPress={() => navigation.navigate("SetupOptions")}>
+                <TouchableOpacity style={styles.button}   onPress={() => navigation.navigate("SetupOptions")}>
                     <Text style={styles.buttonText}>Add Device</Text>
-                </Pressable>
+                    <Ionicons name="add-circle" size={24} color="#1b252d" /> 
+                </TouchableOpacity>
                
             </View>
             
             {controllerStatus !== null && (
                 <View style={styles.statusContainer}>
-                    <Text style={styles.statusText}>
-                        {controllerStatus ? "Status: CONTROLLER IS ON" : "STAND BY: CONTROLLER IS OFF"}
-                    </Text>
+                    <View style={styles.onOffContainer}>
+                    <Text style={styles.statusText}>{getControllerStatusText()}</Text>
+                    <View style={styles.circle} />
+                    </View>
                     {controllerStatus && batteryPercentage !== null && (
-                        <Text style={styles.batteryText}>
-                            Battery: {batteryPercentage}%
-                        </Text>
+                         <View style={styles.batteryContainer}>
+                         <FontAwesome name={getBatteryIcon()} size={24} color="white" />
+                         <Text style={styles.batteryText}>Battery: {batteryPercentage}%</Text>
+                     </View>
+                        
                     )}
                     <TouchableOpacity style={styles.toggleButton} onPress={toggleController}>
-                        <Text style={styles.toggleButtonText}>
-                            {controllerStatus ? "Turn Off" : "Turn On"}
-                        </Text>
-                    </TouchableOpacity>
-                    <Switch
-          trackColor={{false: '#767577', true: '#81b0ff'}}
-          thumbColor={controllerStatus ? '#f5dd4b' : '#f4f3f4'}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={controllerStatus}
-          text="TUrn on"
-        />
+                        <Text style={styles.toggleButtonText}>{controllerStatus ? "Turn Off" : "Turn On"}</Text>
+                        <Switch
+                            trackColor={{false: '#767577', true: '#81b0ff'}}
+                            thumbColor={controllerStatus ? '#f4f3f4' : '#f4f3f4'}
+                            ios_backgroundColor="#3e3e3e"
+                            onValueChange={toggleSwitch}
+                            value={controllerStatus}
+                        />
+                    </TouchableOpacity> 
+        
                 </View>
             )}
 
@@ -148,35 +171,36 @@ const styles = StyleSheet.create({
         backgroundColor: "#1b252d"
     },
     greetingContainer: {
-        marginTop: 50,
+        marginTop: 20,
         marginLeft: 20
     },
     greeting1: {
         color: "white",
-        fontSize: 13
+        fontSize: 18
     },
     greeting2: {
         color: "white",
         fontSize: 23
     },
     devicesContainer: {
-
         justifyContent: 'center',
         alignItems: 'center',
         padding: 30,
-        marginBottom: 100,
+        marginBottom: 10,
     },
     button: {
+        flexDirection: 'row',  // Added for icon + text layout
+        alignItems: 'center',  // Center the icon and text
         backgroundColor: "white",
         borderRadius: 10,
-        marginTop: 15
+        marginTop: 25,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
     },
     buttonText: {
         color: "#1b252d",
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 20,
-        marginRight: 20,
+        marginLeft: 8,  // Space between icon and text
+        fontSize: 16,
     },
     noDeviceText: {
         color: "white"
@@ -187,35 +211,67 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     statusContainer: {
-        alignItems: 'center',
-        marginVertical: 20,
-        backgroundColor: '#333', // Adding a background color for better shadow visibility
-        padding: 15,
-        borderRadius: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.5,
+    alignItems: 'center',
+    marginVertical: 20,
+   // backgroundColor: 'rgba(40, 68, 104, 0.4)', // Semi-transparent blue
+    padding: 15,
+    borderRadius: 10,
     },
     statusText: {
         color: "white",
-        fontSize: 16,
-        marginBottom: 10,
+        fontSize: 14,
         fontWeight: 25,
     },
+    onOffContainer: {
+        alignItems: 'center',
+        marginVertical: 20,
+        backgroundColor: 'rgba(40, 68, 104, 0.4)', // Semi-transparent blu
+        borderRadius: 10,
+        shadowRadius: 3.5,
+        flexDirection: 'row',  // Added for icon + text layout
+        width: 330,
+        height: 73,
+        padding: 26,
+        gap: 30,
+        borderRadius: 20
+    },
+    circle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: 'green',
+      },
     toggleButton: {
+        flexDirection: 'row',  // Added for icon + text layout
+        alignItems: 'center',  // Center the icon and text
         backgroundColor: "white",
-        padding: 10,
-        borderRadius: 10
+        width: 330,
+        height: 73,
+        padding: 26,
+        gap: 30,
+        borderRadius: 20
     },
     toggleButtonText: {
         color: "#1b252d",
-        fontSize: 16
+        fontSize: 16,
+        fontWeight: 700,
+    },
+    batteryContainer: {
+        alignItems: 'center',
+        marginVertical: 20,
+        backgroundColor: 'rgba(240,240,240,0.1)', // Semi-transparent blu
+        borderRadius: 10,
+        shadowRadius: 3.5,
+        flexDirection: 'row',  // Added for icon + text layout
+        width: 330,
+        height: 73,
+        padding: 26,
+        gap: 30,
+        borderRadius: 20
     },
     batteryText: {
         color: "white",
         fontSize: 16,
-        marginBottom: 10
     },
     input: {
         height: 40,
@@ -235,9 +291,9 @@ const styles = StyleSheet.create({
         
     },
     text:{
-        fontSize: 15,
+        fontSize: 16,
         alignSelf: 'left',
-        marginLeft: 20,
+
         color: 'white',
         fontWeight: '600'
       }

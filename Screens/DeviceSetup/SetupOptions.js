@@ -30,12 +30,22 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: "#1b252d",
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 40,
+        color: 'white',
+    },
+    optionsContainer:
+    {
+        alignItems: 'center',
+    marginVertical: 20,
+    backgroundColor: 'rgb(240, 240, 240)', // Semi-transparent blue
+    padding: 15,
+    borderRadius: 10,
+
     },
     button: {
         backgroundColor: '#007BFF',
