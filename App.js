@@ -37,7 +37,7 @@ const App = () => {
            <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
            <Stack.Screen name="AddDevice" component={AddDevice} options={{title: 'Add Device' }} />
            <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{title: 'Device info' }} />
-           <Stack.Screen name="SetupOptions" component={SetupOptions} options={{title: 'Setup Options' }} />
+           <Stack.Screen name="SetupOptions" component={SetupOptions} options={{headerShown: false}} />
          </Stack.Navigator>
        </NavigationContainer>
        </DeviceProvider>

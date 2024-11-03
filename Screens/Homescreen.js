@@ -1,21 +1,22 @@
-import { Button, View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput } from "react-native";
+import { Button, View, Text, StyleSheet, Pressable, ActivityIndicator, FlatList, Modal, TextInput, TouchableOpacity, Switch } from "react-native";
 import DropDownPicker from 'react-native-dropdown-picker';
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
 import BLEsetupStack from "../nav/BLEsetupStack";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 
 const HomeScreen = () => {
     const { user, loading } = useUser();
     const { selectedDevice, setSelectedDevice, setDeviceInfo } = useDevice();
     const [open, setOpen] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
- //  const [selectedDevice, setSelectedDevice] = useState(null);
+    const [batteryPercentage, setBatteryPercentage] = useState(null);
+    const [controllerStatus, setControllerStatus] = useState(null);
     const [devices, setDevices] = useState([]);
     const navigation = useNavigation();
+    const toggleSwitch = () => setControllerStatus(previousState => !previousState);
     
 useEffect(() => {
     if (user && user.uid) {
@@ -40,6 +41,35 @@ useEffect(() => {
         return () => unsubscribe();
     }
 }, [user]);
+
+useEffect(() => {
+    if (selectedDevice) {
+        const db = getDatabase();
+        const statusRef = ref(db, `controllers/${selectedDevice}/status`);
+        const unsubscribeStatus = onValue(statusRef, (snapshot) => {
+            setControllerStatus(snapshot.val());
+        });
+
+        // Listen for battery percentage if the device is on
+        const batteryRef = ref(db, `controllers/${selectedDevice}/battery`);
+        const unsubscribeBattery = onValue(batteryRef, (snapshot) => {
+            setBatteryPercentage(snapshot.val());
+        });
+
+        return () => {
+            unsubscribeStatus();
+            unsubscribeBattery();
+        };
+    }
+}, [selectedDevice]);
+
+    const toggleController = () => {
+        if (selectedDevice) {
+            const db = getDatabase();
+            const statusRef = ref(db, `controllers/${selectedDevice}/status`);
+            set(statusRef, !controllerStatus);  // Toggle the current status
+        }
+    };
 
 
     if (loading) {
@@ -73,7 +103,6 @@ useEffect(() => {
                     containerStyle={{ height: 40 }}
                     style={{ backgroundColor: '#fafafa' }}
                     dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
-                    // Key prop for the picker items
                     keyExtractor={item => item.id} // Ensure each item has a unique key
                 />
                 <Pressable style={styles.button}   onPress={() => navigation.navigate("SetupOptions")}>
@@ -82,24 +111,31 @@ useEffect(() => {
                
             </View>
             
-
-            <Modal
-                animationType="slide"
-                transparent={true} // Make background semi-transparent
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-
-            >
-                <View style={styles.modalView}>
-                    <Text style={styles.modalTitle}>Setup</Text>
-                    
-                        
-                        <BLEsetupStack closeModal={() => setModalVisible(false)} />
-                    
-                    <Button title="Submit" onPress={() => { setModalVisible(false); }} />
-                    <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            {controllerStatus !== null && (
+                <View style={styles.statusContainer}>
+                    <Text style={styles.statusText}>
+                        {controllerStatus ? "Status: CONTROLLER IS ON" : "STAND BY: CONTROLLER IS OFF"}
+                    </Text>
+                    {controllerStatus && batteryPercentage !== null && (
+                        <Text style={styles.batteryText}>
+                            Battery: {batteryPercentage}%
+                        </Text>
+                    )}
+                    <TouchableOpacity style={styles.toggleButton} onPress={toggleController}>
+                        <Text style={styles.toggleButtonText}>
+                            {controllerStatus ? "Turn Off" : "Turn On"}
+                        </Text>
+                    </TouchableOpacity>
+                    <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={controllerStatus ? '#f5dd4b' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleSwitch}
+          value={controllerStatus}
+          text="TUrn on"
+        />
                 </View>
-            </Modal>
+            )}
 
         </View>
     );
@@ -150,27 +186,36 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 10
     },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        backgroundColor: 'rgba(0,0,0,0.5)', 
+    statusContainer: {
+        alignItems: 'center',
+        marginVertical: 20,
+        backgroundColor: '#333', // Adding a background color for better shadow visibility
+        padding: 15,
+        borderRadius: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.5,
     },
-    modalView: {
-        
-        position: 'absolute',
-        width: '80%',
-        height: '60%',
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 20,
+    statusText: {
+        color: "white",
+        fontSize: 16,
+        marginBottom: 10,
+        fontWeight: 25,
     },
-
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 15,
-        textAlign: 'center'
+    toggleButton: {
+        backgroundColor: "white",
+        padding: 10,
+        borderRadius: 10
+    },
+    toggleButtonText: {
+        color: "#1b252d",
+        fontSize: 16
+    },
+    batteryText: {
+        color: "white",
+        fontSize: 16,
+        marginBottom: 10
     },
     input: {
         height: 40,
