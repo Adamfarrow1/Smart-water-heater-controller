@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:main.jsbundle">
+   </FileRef>
+   <FileRef
       location = "group:SWHC.xcodeproj">
    </FileRef>
    <FileRef
