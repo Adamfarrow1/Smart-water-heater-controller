@@ -2,26 +2,79 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import Tips from './Carousel';
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, set, onValue } from "firebase/database";
+import { useDevice } from '../context/DeviceContext';
+
 function EnergySaved() {
   const [data, setData] = useState([60, 60, 60, 60, 60, 60]);
-
+  const { selectedDevice, deviceInfo } = useDevice();
+  
   useEffect(() => {
     const db = getDatabase();
-    const deviceref = ref(db, 'controllers/device_002');
+    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData/frequency`);
+    
     onValue(deviceref, (snapshot) => {
-      const data = snapshot.val();
-      setData(data.frequency);
+      const fetchedData = snapshot.val();
+      
+      if (fetchedData) {
+        const frequencyArray = Object.entries(fetchedData)
+          .sort(([timestampA], [timestampB]) => timestampA.localeCompare(timestampB)) // Sort by timestamp string
+          .map(([, value]) => value);
+  
+        const latestFrequencies = frequencyArray.slice(-10);
+        
+        setData(latestFrequencies);
+      } else {
+        console.error("Fetched data is not available:", fetchedData);
+      }
     });
   
     return;
-  }, []);
-  
+  }, [selectedDevice]);
+
+  // Weighted random function for generating frequency with a higher chance of getting 60
+  const generateFrequency = () => {
+    const random = Math.random();
+    if (random < 0.8) return 60; // 60% chance of 60
+    return Math.random() < 0.5 ? 59 : 61; // 20% chance each of 58 or 62
+  };
+
+  const formatDateKey = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  useEffect(() => {
+    const db = getDatabase();
+    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData/frequency`);
+    
+    const intervalId = setInterval(() => {
+      const newFrequency = generateFrequency();
+      const dateTimeKey = formatDateKey(); // Generate key in 'YYYY-MM-DD HH:MM:SS' format
+      
+      // Set the frequency with the formatted date-time as the key
+      set(ref(db, `controllers/${selectedDevice}/sensorData/frequency/${dateTimeKey}`), newFrequency)
+        .then(() => {
+          console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
+        })
+        .catch((error) => {
+          console.error("Error uploading frequency:", error);
+        });
+    }, 3000); // Run every 3 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [selectedDevice]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Device Selected:</Text>
-      <Text style={styles.deviceName}>Home device</Text>
+      <Text style={styles.deviceName}>{selectedDevice || "No Device Selected"}</Text>
       <Text style={styles.text}>Frequencies:</Text>
       <TouchableOpacity style={styles.chartContainer}>
         <LineChart

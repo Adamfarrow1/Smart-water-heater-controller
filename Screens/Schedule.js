@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, Modal, TextInput, Button, TouchableOpacity, Pla
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Agenda } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect } from 'react';
+import { getDatabase, ref, onValue,update, push  } from "firebase/database";
+import { useDevice } from '../context/DeviceContext';
 
 const currentDate = new Date().toISOString().split('T')[0];
 const work = { key: 'work', color: 'red', selectedDotColor: 'blue' };
@@ -11,6 +14,7 @@ const workout = { key: 'workout', color: 'green' };
 
 function Schedule() {
   const navigation = useNavigation();
+  const { selectedDevice, deviceInfo } = useDevice(); 
   const [selectedDay, setSelectedDay] = useState(currentDate);
   const [items, setItems] = useState({
     '2024-08-24': [{ name: 'Sample task for 24th' }],
@@ -22,6 +26,49 @@ function Schedule() {
   const [toTime, setToTime] = useState(new Date());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+
+  useEffect(() => {
+    const db = getDatabase();
+    const deviceRef = ref(db, `controllers/${selectedDevice}/sensorData/scheduling`);
+    
+    // Define today's date in `YYYY-MM-DD` format
+    const today = new Date().toISOString().split('T')[0];
+  
+    // Listen for changes on the scheduling path
+    onValue(deviceRef, (snapshot) => {
+      const data = snapshot.val() ?? {}; // Ensure data is an object to iterate over
+      const newItems = {};
+  
+      // Iterate over each date in the data
+      Object.entries(data).forEach(([date, events]) => {
+        if (date >= today) { // Only include dates that are today or in the future
+          newItems[date] = [];
+          
+          // For each event on a given date, push it to the array for that date
+          Object.values(events).forEach((event) => {
+            newItems[date].push({
+              name: event.name,
+              from: event.from,
+              to: event.to,
+            });
+          });
+        }
+      });
+  
+      setItems(newItems);
+    }, (firebaseError) => {
+      console.error("Error reading scheduling data from Firebase:", firebaseError);
+    });
+  
+    return () => {
+      // Optional: detach the listener if necessary
+    };
+  }, [selectedDevice]);
+  
+  
+  
+  
+  
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -39,6 +86,7 @@ function Schedule() {
 
   const addNewEvent = () => {
     if (newEventName.trim()) {
+      // Update local state for displaying in the agenda
       setItems((prevItems) => ({
         ...prevItems,
         [selectedDay]: [
@@ -46,10 +94,37 @@ function Schedule() {
           { name: newEventName, from: fromTime.toLocaleTimeString(), to: toTime.toLocaleTimeString() },
         ],
       }));
+  
+      // Reset input fields and close modal
       setNewEventName('');
       setIsModalVisible(false);
+  
+      // Save the new event to Firebase under the specific selected date
+      const db = getDatabase();
+      const deviceRef = ref(db, `controllers/${selectedDevice}/sensorData/scheduling/${selectedDay}`);
+      
+      // Use `push` to add a new unique key for each event under the selected date in Firebase
+      const newEventRef = push(deviceRef);
+      const newEventData = {
+        name: newEventName,
+        from: fromTime.toLocaleTimeString(),
+        to: toTime.toLocaleTimeString(),
+        timestamp: Date.now(), // Optional: timestamp for sorting
+      };
+      
+      update(newEventRef, newEventData)
+        .then(() => {
+          console.log("Event successfully added to Firebase");
+        })
+        .catch((firebaseError) => {
+          console.error("Error adding event to Firebase:", firebaseError);
+        });
     }
   };
+  
+  
+  
+  
 
   const renderItem = (item) => (
     <View style={styles.item}>

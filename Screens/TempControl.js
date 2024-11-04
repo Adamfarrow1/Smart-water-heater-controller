@@ -4,18 +4,21 @@ import RadialVariant from '../components/RadialVar';
 import { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue,update  } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
-
 function TempControl() {
   const { selectedDevice, deviceInfo } = useDevice(); 
   const [data, setData] = useState(0);
   const [speed, setSpeed] = useState(120);
   useEffect(() => {
     const db = getDatabase();
-    const deviceref = ref(db, 'controllers/device_002');
+    console.log()
+    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData`);
     onValue(deviceref, (snapshot) => {
       const data = snapshot.val();
+      if(data){
+        console.log(data.temperature)
       setData(data.temperature);
       setSpeed(data.temperature)
+      }
       console.log(deviceInfo);
       console.log(selectedDevice);
     });
@@ -25,17 +28,18 @@ function TempControl() {
   }, []);
 
   useEffect(() => {
-      console.log(speed)
+      console.log("speed")
     },[speed]);
 
 
   function changeTemp() {
     const db = getDatabase();
-    console.log(speed)
+    console.log("speed")
     const updates = {};
-    updates['controllers/device_002/temperature'] = speed;
+    console.log(selectedDevice)
+    updates[`controllers/${selectedDevice}/sensorData/temperature`] = speed;
     update(ref(db), updates)
-      .catch((error) => {
+      .catch((error) => {  // Ensure 'error' is properly referenced here
         console.error('Error updating temperature:', error);
       });
       setData(speed)
