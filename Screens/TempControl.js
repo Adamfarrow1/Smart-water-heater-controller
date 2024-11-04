@@ -11,7 +11,7 @@ function TempControl() {
   useEffect(() => {
     const db = getDatabase();
     console.log()
-    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData`);
+    const deviceref = ref(db, `controllers/${selectedDevice}`);
     onValue(deviceref, (snapshot) => {
       const data = snapshot.val();
       if(data){
@@ -37,7 +37,7 @@ function TempControl() {
     console.log("speed")
     const updates = {};
     console.log(selectedDevice)
-    updates[`controllers/${selectedDevice}/sensorData/temperature`] = speed;
+    updates[`controllers/${selectedDevice}/temperature`] = speed;
     update(ref(db), updates)
       .catch((error) => {  // Ensure 'error' is properly referenced here
         console.error('Error updating temperature:', error);

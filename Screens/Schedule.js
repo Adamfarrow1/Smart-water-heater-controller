@@ -29,7 +29,7 @@ function Schedule() {
 
   useEffect(() => {
     const db = getDatabase();
-    const deviceRef = ref(db, `controllers/${selectedDevice}/sensorData/scheduling`);
+    const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling`);
     
     // Define today's date in `YYYY-MM-DD` format
     const today = new Date().toISOString().split('T')[0];
@@ -101,7 +101,7 @@ function Schedule() {
   
       // Save the new event to Firebase under the specific selected date
       const db = getDatabase();
-      const deviceRef = ref(db, `controllers/${selectedDevice}/sensorData/scheduling/${selectedDay}`);
+      const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling/${selectedDay}`);
       
       // Use `push` to add a new unique key for each event under the selected date in Firebase
       const newEventRef = push(deviceRef);

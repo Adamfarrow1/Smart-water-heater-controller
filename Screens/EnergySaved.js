@@ -11,7 +11,7 @@ function EnergySaved() {
   
   useEffect(() => {
     const db = getDatabase();
-    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData/frequency`);
+    const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
     
     onValue(deviceref, (snapshot) => {
       const fetchedData = snapshot.val();
@@ -32,12 +32,12 @@ function EnergySaved() {
     return;
   }, [selectedDevice]);
 
-  // Weighted random function for generating frequency with a higher chance of getting 60
-  const generateFrequency = () => {
-    const random = Math.random();
-    if (random < 0.8) return 60; // 60% chance of 60
-    return Math.random() < 0.5 ? 59 : 61; // 20% chance each of 58 or 62
-  };
+  // // Weighted random function for generating frequency with a higher chance of getting 60
+  // const generateFrequency = () => {
+  //   const random = Math.random();
+  //   if (random < 0.8) return 60; // 60% chance of 60
+  //   return Math.random() < 0.5 ? 59 : 61; // 20% chance each of 58 or 62
+  // };
 
   const formatDateKey = () => {
     const now = new Date();
@@ -50,26 +50,26 @@ function EnergySaved() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
-  useEffect(() => {
-    const db = getDatabase();
-    const deviceref = ref(db, `controllers/${selectedDevice}/sensorData/frequency`);
+  // useEffect(() => {
+  //   const db = getDatabase();
+  //   const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
     
-    const intervalId = setInterval(() => {
-      const newFrequency = generateFrequency();
-      const dateTimeKey = formatDateKey(); // Generate key in 'YYYY-MM-DD HH:MM:SS' format
+  //   const intervalId = setInterval(() => {
+  //     const newFrequency = generateFrequency();
+  //     const dateTimeKey = formatDateKey(); // Generate key in 'YYYY-MM-DD HH:MM:SS' format
       
-      // Set the frequency with the formatted date-time as the key
-      set(ref(db, `controllers/${selectedDevice}/sensorData/frequency/${dateTimeKey}`), newFrequency)
-        .then(() => {
-          console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
-        })
-        .catch((error) => {
-          console.error("Error uploading frequency:", error);
-        });
-    }, 3000); // Run every 3 seconds
+  //     // Set the frequency with the formatted date-time as the key
+  //     set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
+  //       .then(() => {
+  //         console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error uploading frequency:", error);
+  //       });
+  //   }, 3000); // Run every 3 seconds
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [selectedDevice]);
+  //   return () => clearInterval(intervalId); // Cleanup on unmount
+  // }, [selectedDevice]);
 
   return (
     <View style={styles.container}>
