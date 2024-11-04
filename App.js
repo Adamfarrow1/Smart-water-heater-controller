@@ -7,11 +7,14 @@ import Login from './Screens/Login.js';
 import ForgotPassword from './Screens/ForgotPassword.js';
 import Register from './Screens/Register.js';
 import Homescreen from './Screens/Homescreen.js';
-import BLEsetup from './components/BLEsetup.js';
+//import BLEsetup from './components/DeviceSetup.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
 import { DeviceProvider } from './context/DeviceContext';
 import BLEdemo from './Screens/BLEdemo.js';
+import AddDevice from './Screens/DeviceSetup/AddDevice.js';
+import SetupOptions from './Screens/DeviceSetup/SetupOptions.js';
+import DeviceInfo from './Screens/DeviceSetup/DeviceInfo.js';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -32,6 +35,9 @@ const App = () => {
            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
            {/*<Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />*/}
            <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
+           <Stack.Screen name="AddDevice" component={AddDevice} options={{title: 'Add Device' }} />
+           <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{title: 'Device info' }} />
+           <Stack.Screen name="SetupOptions" component={SetupOptions} options={{headerShown: false}} />
          </Stack.Navigator>
        </NavigationContainer>
        </DeviceProvider>

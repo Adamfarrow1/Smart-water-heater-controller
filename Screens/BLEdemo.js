@@ -19,13 +19,12 @@ const BLEdemo = () => {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [userDevices, setUserDevices] = useState({});
-    // Reference to the user's devices in Firebase RTDB
-    const db = getDatabase();
+
 
   const scanForDevices = async () => {
     try {
       setIsScanning(true);
-      const prefix = 'PROV';
+      const prefix = '';
       const transport = ESPTransport.ble;
       const security = ESPSecurity.secure2;
 
@@ -56,7 +55,6 @@ const BLEdemo = () => {
       await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
 
-      // Add user.uid to the payload
       await selectedDevice.disconnect();
       const uid = user?.uid;
       console.log("Sending UID to ESP32:", uid);
@@ -86,6 +84,8 @@ const BLEdemo = () => {
         if (response.ok) {
             const responseBody = JSON.parse(responseText); // Parse the JSON response
             console.log("Response from ESP32:", responseBody);
+            const deviceId = responseBody.deviceId;
+            navigation.navigate('DeviceInfo', { deviceId: deviceId});
         } else {
             console.error("Failed to send UID. Status:", response.status);
         }
@@ -95,12 +95,6 @@ const BLEdemo = () => {
 };
 
   
-
-
-
-
-
-  
   const showWifiDialog = (device) => {
     setSelectedDevice(device);
     setModalVisible(true);
@@ -108,7 +102,7 @@ const BLEdemo = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>BLE Device Scanner</Text>
+      <Text style={styles.title}>Connect through bluetooth to the esp32</Text>
       <Button title={isScanning ? 'Scanning...' : 'Scan for Devices'} onPress={scanForDevices} disabled={isScanning} />
       <FlatList
         data={devices}
@@ -172,7 +166,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'white',
     padding: 20,
   },
   modalTitle: {
