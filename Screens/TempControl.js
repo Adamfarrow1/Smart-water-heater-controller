@@ -6,9 +6,10 @@ import { getDatabase, ref, onValue,update  } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 function TempControl() {
   const { selectedDevice, deviceInfo } = useDevice(); 
-  const [data, setData] = useState(0);
+  const [data, setData] = useState(120);
   const [speed, setSpeed] = useState(120);
   useEffect(() => {
+    if(!selectedDevice) return
     const db = getDatabase();
     console.log()
     const deviceref = ref(db, `controllers/${selectedDevice}`);
@@ -24,6 +25,7 @@ function TempControl() {
     });
 
     console.log("runnin")
+
     return;
   }, []);
 
@@ -33,11 +35,12 @@ function TempControl() {
 
 
   function changeTemp() {
+    if(!selectedDevice) return
     const db = getDatabase();
     console.log("speed")
     const updates = {};
     console.log(selectedDevice)
-    updates[`controllers/${selectedDevice}/temperature`] = speed;
+    updates[`controllers/${selectedDevice}/set_temperature`] = speed;
     update(ref(db), updates)
       .catch((error) => {  // Ensure 'error' is properly referenced here
         console.error('Error updating temperature:', error);

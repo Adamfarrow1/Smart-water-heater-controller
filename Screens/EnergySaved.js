@@ -10,6 +10,7 @@ function EnergySaved() {
   const { selectedDevice, deviceInfo } = useDevice();
   
   useEffect(() => {
+    if(!selectedDevice) return
     const db = getDatabase();
     const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
     

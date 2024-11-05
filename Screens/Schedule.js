@@ -28,6 +28,7 @@ function Schedule() {
   const [showToPicker, setShowToPicker] = useState(false);
 
   useEffect(() => {
+    if(!selectedDevice) return
     const db = getDatabase();
     const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling`);
     
@@ -85,6 +86,7 @@ function Schedule() {
   };
 
   const addNewEvent = () => {
+    if(!selectedDevice) return
     if (newEventName.trim()) {
       // Update local state for displaying in the agenda
       setItems((prevItems) => ({
