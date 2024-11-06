@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, Button, Modal, TextInput, StyleSheet, FlatList } from 'react-native';
 import {
-  ESPProvisionManager,
-  ESPDevice,
-  ESPTransport,
-  ESPSecurity,
-} from '@orbital-systems/react-native-esp-idf-provisioning';
+  View,
+  Text,
+  Alert,
+  Button,
+  Modal,
+  TextInput,
+  StyleSheet,
+  FlatList,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { ESPProvisionManager, ESPDevice, ESPTransport, ESPSecurity } from '@orbital-systems/react-native-esp-idf-provisioning';
 import { useUser } from "../context/userContext";
 import { getDatabase, ref, onValue, update, database } from 'firebase/database';
 import axios from 'axios';
+import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native'; // Add if you are using navigation
+
 
 const BLEdemo = () => {
   const { user, loading } = useUser();

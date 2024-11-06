@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, Button, Modal, TextInput, StyleSheet, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  Alert,
+  Button,
+  Modal,
+  TextInput,
+  StyleSheet,
+  FlatList,
+  SafeAreaView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import {
   ESPProvisionManager,
   ESPDevice,
@@ -9,6 +21,9 @@ import {
 import { useUser } from '../../context/userContext';
 import { getDatabase, ref, onValue, update, database } from 'firebase/database';
 import { useNavigation } from '@react-navigation/native';
+import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 const AddDevice = () => {
     const { user, loading } = useUser();
