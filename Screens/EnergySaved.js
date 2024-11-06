@@ -8,7 +8,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 function EnergySaved() {
   const [data, setData] = useState([59, 60, 60, 60, 60, 61, 60, 60, 60 ,61]);
-  const { selectedDevice, deviceInfo } = useDevice();
+  const { selectedDevice, deviceInfo, setName, name } = useDevice();
   const navigation = useNavigation();
 
   useFocusEffect(
@@ -82,7 +82,7 @@ function EnergySaved() {
           <View style={styles.deviceInfo}>
             <Feather name="thermometer" size={24} color="#ffffff" style={styles.icon} />
             <Text style={styles.deviceName}>
-              {selectedDevice || "No Device Selected"}
+              {name || "No Device Selected"}
             </Text>
           </View>
           <Text style={styles.headerSubtitle}>Monitor your device's performance</Text>

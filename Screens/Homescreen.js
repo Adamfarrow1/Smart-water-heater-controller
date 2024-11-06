@@ -18,7 +18,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
 const HomeScreen = () => {
   const { user, loading } = useUser();
-  const { selectedDevice, setSelectedDevice, setDeviceInfo } = useDevice();
+  const { selectedDevice, setSelectedDevice, setDeviceInfo, deviceInfo, setName, name } = useDevice();
   const [open, setOpen] = useState(false);
   const [batteryPercentage, setBatteryPercentage] = useState(null);
   const [controllerStatus, setControllerStatus] = useState(null);
@@ -110,24 +110,34 @@ const HomeScreen = () => {
 
         <View style={styles.devicesContainer}>
           <Text style={styles.sectionTitle}>Selected Device</Text>
-            <DropDownPicker
-            open={open}
-            value={selectedDevice}
-            items={devices}
-            setOpen={setOpen}
-            setValue={(value) => {
-                const selected = devices.find(device => device.value === value);
-                setSelectedDevice(value);
-                setDeviceInfo(selected);
-            }}
-            placeholder={'Select a device'}
-            containerStyle={[styles.dropdownContainer, open && styles.dropdownOpen]}
-            style={styles.dropdown}
-            listMode="SCROLLVIEW"
-            dropDownContainerStyle={styles.dropdownList}
-            textStyle={styles.dropdownText}
-            placeholderStyle={styles.dropdownPlaceholder}
-            />
+          <DropDownPicker
+              open={open}
+              value={selectedDevice}
+              items={devices}
+              setOpen={setOpen}
+              setValue={setSelectedDevice} // Directly set the value here
+              onChangeValue={(value) => { // Use onChangeValue to handle additional logic
+                  console.log("Selected value:", value);
+                  const selected = devices.find(device => device.value === value);
+                  console.log("Selected device object:", selected);
+
+                  if (selected) {
+                      console.log("Setting name to:", selected.label);
+                      setName(selected.label); // Set the name variable to the label of the selected item
+                      setDeviceInfo(selected);
+                  } else {
+                      console.warn("No matching device found!");
+                  }
+              }}
+              placeholder={'Select a device'}
+              containerStyle={[styles.dropdownContainer, open && styles.dropdownOpen]}
+              style={styles.dropdown}
+              listMode="SCROLLVIEW"
+              dropDownContainerStyle={styles.dropdownList}
+              textStyle={styles.dropdownText}
+              placeholderStyle={styles.dropdownPlaceholder}
+          />
+
 
           <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
             <Ionicons name="add-circle-outline" size={24} color="#ffffff" />

@@ -7,9 +7,10 @@ const DeviceContext = createContext();
 export const DeviceProvider = ({ children }) => {
     const [selectedDevice, setSelectedDevice] = useState(null); // Initialize to null or a default value
     const [deviceInfo, setDeviceInfo] = useState({}); // Initialize deviceInfo to an empty object
+    const [name, setName] = useState('');
 
     return (
-        <DeviceContext.Provider value={{ selectedDevice, setSelectedDevice, deviceInfo, setDeviceInfo }}>
+        <DeviceContext.Provider value={{ selectedDevice, setSelectedDevice, deviceInfo, setDeviceInfo, setName, name }}>
             {children}
         </DeviceContext.Provider>
     );

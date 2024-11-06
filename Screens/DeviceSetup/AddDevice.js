@@ -1,39 +1,89 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Modal, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Alert, Button, Modal, TextInput, StyleSheet, FlatList } from 'react-native';
+import {
+  ESPProvisionManager,
+  ESPDevice,
+  ESPTransport,
+  ESPSecurity,
+} from '@orbital-systems/react-native-esp-idf-provisioning';
+import { useUser } from '../../context/userContext';
+import { getDatabase, ref, onValue, update, database } from 'firebase/database';
+import { useNavigation } from '@react-navigation/native';
 
-const AddDevice = ({ navigation }) => {
-  const [isScanning, setIsScanning] = useState(false);
-  const [devices, setDevices] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState(null);
+const AddDevice = () => {
+    const { user, loading } = useUser();
+    const [devices, setDevices] = useState([]);
+    const [isScanning, setIsScanning] = useState(false);
+    const [selectedDevice, setSelectedDevice] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const navigation = useNavigation(); 
 
-  const scanForDevices = () => {
-    setIsScanning(true);
-    // Simulating device discovery
-    setTimeout(() => {
-      setDevices([
-        { id: '1', name: 'ESP32-Device1' },
-        { id: '2', name: 'ESP32-Device2' },
-      ]);
-      setIsScanning(false);
-    }, 2000);
-  };
+    const scanForDevices = async () => {
+        try {
+          setIsScanning(true);
+          const prefix = '';
+          const transport = ESPTransport.ble;
+          const security = ESPSecurity.secure2;
+    
+          const foundDevices = await ESPProvisionManager.searchESPDevices(prefix, transport, security);
+    
+          if (foundDevices.length === 0) {
+            Alert.alert('No Devices Found', 'No BLE devices found.');
+          } else {
+          //  console.log('Found devices:', foundDevices);
+            setDevices(foundDevices);
+          }
+        } catch (error) {
+          console.error(error);
+          Alert.alert('Error', `Failed to scan for devices: ${error.message}`);
+        } finally {
+          setIsScanning(false);
+        }
+      };
 
-  const showConfirmDialog = (device) => {
-    setSelectedDevice(device);
-    setModalVisible(true);
-  };
-
-  const connectToDevice = async () => {
+    const connectToDevice = async () => {
     if (!selectedDevice) return;
-    // Implement your connection logic here
-    console.log(`Connecting to device: ${selectedDevice.name}`);
-    setModalVisible(false);
-    // Navigate to DeviceInfo screen (implement this part)
-    // navigation.navigate('DeviceInfo', { deviceId: selectedDevice.id });
-  };
 
+      // Add user.uid to the payload
+      await selectedDevice.disconnect();
+      const uid = user?.uid;
+      console.log("Sending UID to ESP32:", uid);
+      await sendUIDToESP32(uid);
+    };
+
+      const sendUIDToESP32 = async (uid) => {
+        const data = { uid: uid };
+        try {
+            const response = await fetch(`http://esp32.local/receiveUID`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+    
+            // Log the raw response for debugging
+            const responseText = await response.text(); // Get the raw response text
+            console.log("Raw response from ESP32:", responseText); // Log raw response
+    
+            if (response.ok) {
+                const responseBody = JSON.parse(responseText); // Parse the JSON response
+                console.log("Response from ESP32:", responseBody);
+                // Navigate back to Home Screen after successful connection
+                const deviceId = responseBody.deviceId;
+                navigation.navigate('DeviceInfo', { deviceId: deviceId});
+            } else {
+                console.error("Failed to send UID. Status:", response.status);
+            }
+        } catch (error) {
+            console.error("Error sending UID to ESP32:", error);
+        }
+    };
+
+    const showWifiDialog = (device) => {
+        setSelectedDevice(device);
+        setModalVisible(true);
+      };
   return (
     <SafeAreaView style={styles.container}>
       <FlatList

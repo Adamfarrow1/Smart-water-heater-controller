@@ -7,7 +7,7 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 function TempControl() {
-  const { selectedDevice, deviceInfo } = useDevice();
+  const { selectedDevice, deviceInfo,setName, name } = useDevice();
   const [currentTemp, setCurrentTemp] = useState(120);
   const [setTemp, setSetTemp] = useState(120);
 
@@ -56,7 +56,7 @@ function TempControl() {
           <View style={styles.deviceInfo}>
             <Feather name="thermometer" size={24} color="#ffffff" style={styles.icon} />
             <Text style={styles.deviceName}>
-              {selectedDevice || "No Device Selected"}
+              {name || "No Device Selected"}
             </Text>
           </View>
         </View>
