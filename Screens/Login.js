@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, Pressable } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Pressable, TouchableOpacity } from 'react-native';
 import {auth,  signInWithEmailAndPassword } from '../context/firebaseConfig';
 import { useState } from 'react';
 import { useUser } from '../context/userContext';
@@ -8,17 +8,31 @@ export default function Login( { navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { user } = useUser(); 
+  const [error, setError] = useState('');
 
   const handleLogin = async () => {
     console.log("logging in")
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      setEmail('');
+      setPassword('');
       navigation.navigate("Home")
       
     } catch (error) {
-      console.log("it doe snot work")
+      if (error.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else if (error.code === 'auth/user-disabled') {
+        setError('This account has been disabled. Please contact support.');
+      } else if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email.');
+      } else if (error.code === 'auth/wrong-password') {
+        setError('Incorrect password.');
+      } else {
+        setError('Login failed. Check credentials and try again.');
+      }
       console.log(error);
     }
+    
   };
 
 
@@ -28,20 +42,25 @@ export default function Login( { navigation }) {
       <Text style={styles.title}>Login</Text>
       <View style={styles.formContainer}>
         <Text style={styles.subtitle}>Enter your email and password</Text>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder='Email' placeholderTextColor="#aaa" />
         <TextInput style={styles.input} value={password} onChangeText={setPassword} placeholder='Password' secureTextEntry={true} placeholderTextColor="#aaa" />
-        <Pressable style={styles.button}  onPress={handleLogin}>
+        <TouchableOpacity style={styles.button}  onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
-        </Pressable>
+        </TouchableOpacity>
+        
         <View style={styles.horizontal_line_container}>
           <View style={styles.line} />
             <Text style={styles.breaker_text}>or login with</Text>
           <View style={styles.line} />
         </View>
-        <Pressable style={styles.googleButton }  >
+        <TouchableOpacity style={styles.googleButton }  >
         
           <Text style={styles.googleButtonText}>Google</Text>
-        </Pressable>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonForgot}  onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.buttonText}>Forgot Password? </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -54,6 +73,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+  },
+  errorText:{
+    color: 'red',
+    padding: 10
   },
   breaker_text:{
     marginHorizontal: 10,
@@ -101,6 +124,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     backgroundColor: '#506680',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonForgot: {
+    width: '100%',
+    padding: 5,
+
     alignItems: 'center',
     marginTop: 10,
   },

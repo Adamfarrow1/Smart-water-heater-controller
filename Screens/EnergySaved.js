@@ -1,149 +1,155 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Text, ScrollView, SafeAreaView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import Tips from './Carousel';
 import { getDatabase, ref, set, onValue } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
+import { Feather } from '@expo/vector-icons';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 function EnergySaved() {
-  const [data, setData] = useState([60, 60, 60, 60, 60, 60]);
+  const [data, setData] = useState([59, 60, 60, 60, 60, 61, 60, 60, 60 ,61]);
   const { selectedDevice, deviceInfo } = useDevice();
-  
-  useEffect(() => {
-    if(!selectedDevice) return
-    const db = getDatabase();
-    const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
-    
-    onValue(deviceref, (snapshot) => {
-      const fetchedData = snapshot.val();
-      
-      if (fetchedData) {
-        const frequencyArray = Object.entries(fetchedData)
-          .sort(([timestampA], [timestampB]) => timestampA.localeCompare(timestampB)) // Sort by timestamp string
-          .map(([, value]) => value);
-  
-        const latestFrequencies = frequencyArray.slice(-10);
-        
-        setData(latestFrequencies);
-      } else {
-        console.error("Fetched data is not available:", fetchedData);
-      }
-    });
-  
-    return;
-  }, [selectedDevice]);
+  const navigation = useNavigation();
 
-  // // Weighted random function for generating frequency with a higher chance of getting 60
-  // const generateFrequency = () => {
-  //   const random = Math.random();
-  //   if (random < 0.8) return 60; // 60% chance of 60
-  //   return Math.random() < 0.5 ? 59 : 61; // 20% chance each of 58 or 62
-  // };
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedDevice) return;
+      const db = getDatabase();
+      const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
+      
+      const unsubscribe = onValue(deviceref, (snapshot) => {
+        const fetchedData = snapshot.val();
+        
+        if (fetchedData) {
+          const frequencyArray = Object.entries(fetchedData)
+            .sort(([timestampA], [timestampB]) => timestampA.localeCompare(timestampB))
+            .map(([, value]) => value);
+    
+          const latestFrequencies = frequencyArray.slice(-10);
+          setData(latestFrequencies);
+        }
+      });
+    
+      return () => unsubscribe();
+    }, [selectedDevice])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedDevice) return;
+      const db = getDatabase();
+      const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
+      
+      const intervalId = setInterval(() => {
+        const newFrequency = generateFrequency();
+        const dateTimeKey = formatDateKey();
+        
+        set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
+          .then(() => {
+            console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
+          })
+          .catch((error) => {
+            console.error("Error uploading frequency:", error);
+          });
+      }, 3000);
+
+      return () => clearInterval(intervalId);
+    }, [selectedDevice])
+  );
+
+  const generateFrequency = () => {
+    const random = Math.random();
+    if (random < 0.8) return 60;
+    return Math.random() < 0.5 ? 59 : 61;
+  };
 
   const formatDateKey = () => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   };
 
-  // useEffect(() => {
-  //   const db = getDatabase();
-  //   const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
-    
-  //   const intervalId = setInterval(() => {
-  //     const newFrequency = generateFrequency();
-  //     const dateTimeKey = formatDateKey(); // Generate key in 'YYYY-MM-DD HH:MM:SS' format
-      
-  //     // Set the frequency with the formatted date-time as the key
-  //     set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
-  //       .then(() => {
-  //         console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error uploading frequency:", error);
-  //       });
-  //   }, 3000); // Run every 3 seconds
-
-  //   return () => clearInterval(intervalId); // Cleanup on unmount
-  // }, [selectedDevice]);
+  const TipCard = ({ icon, text, onPress }) => (
+    <TouchableOpacity onPress={onPress} style={styles.tipRow}>
+      <Feather name={icon} size={20} color="#60a5fa" style={styles.tipIcon} />
+      <Text style={styles.tipText}>{text}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Device Selected:</Text>
-      <Text style={styles.deviceName}>{selectedDevice || "No Device Selected"}</Text>
-      <Text style={styles.text}>Frequencies:</Text>
-      <TouchableOpacity style={styles.chartContainer}>
-        <LineChart
-          data={{
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{ data }],
-          }}
-          width={Dimensions.get('window').width - 40}
-          height={220}
-          yAxisMax={70}
-          yAxisMin={50}
-          yAxisSuffix="hz"
-          chartConfig={{
-            backgroundColor: '#22303c',
-            backgroundGradientFrom: '#22303c',
-            backgroundGradientTo: '#22303c',
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            style: { borderRadius: 16 },
-          }}
-          bezier
-          style={styles.chart}
-        />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.deviceInfo}>
+            <Feather name="thermometer" size={24} color="#ffffff" style={styles.icon} />
+            <Text style={styles.deviceName}>
+              {selectedDevice || "No Device Selected"}
+            </Text>
+          </View>
+          <Text style={styles.headerSubtitle}>Monitor your device's performance</Text>
+        </View>
 
-      <View style={styles.tipsContainer}>
-        <Text style={styles.text}>Tips:</Text>
-        <Tips />
-      </View>
-    </View>
+        {/* View All Frequencies Button using TipCard */}
+        <TipCard 
+          icon="zap"  // Using "zap" icon for the lightning bolt
+          text="View All Frequencies"
+          onPress={() => navigation.navigate('AllFrequencies')}
+        />
+
+        
+          <Text style={styles.cardTitle}>Frequency Monitoring</Text>
+          <LineChart
+            data={{
+              datasets: [{ data }],
+            }}
+            width={Dimensions.get('window').width - 40}
+            height={220}
+            yAxisSuffix="hz"
+            chartConfig={{
+              backgroundColor: '#1e293b',
+              backgroundGradientFrom: '#1e293b',
+              backgroundGradientTo: '#1e293b',
+              color: (opacity = 1) => `rgba(96, 165, 250, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
+              style: { borderRadius: 16 },
+              propsForDots: { r: "6", strokeWidth: "2", stroke: "#60a5fa" },
+            }}
+            bezier
+            style={styles.chart}
+          />
+
+      
+          <Text style={styles.cardTitle}>Energy Saving Tips</Text>
+          <View style={styles.tipsContainer}>
+            <TipCard
+              icon="clock"
+              text="Monitor frequency variations during peak hours to optimize energy consumption"
+            />
+            <TipCard
+              icon="thermometer"
+              text="Keep your device in optimal temperature range for better efficiency"
+            />
+          
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  text: {
-    fontSize: 13,
-    marginTop: 50,
-    alignSelf: 'left',
-    marginLeft: 20,
-    color: 'white',
-  },
-  deviceName: {
-    color: "white",
-    fontSize: 23,
-    alignSelf: 'left',
-    marginLeft: 20,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#1b252d",
-    alignItems: 'center',
-  },
-  chartContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  tipsContainer: {
-    width: '100%', 
-    height: 250, 
-    marginTop: 20,
-    justifyContent: 'center', 
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: "#1b252d", paddingHorizontal: 20 },
+  scrollContent: { padding: 20 },
+  header: { marginBottom: 20 },
+  deviceInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  icon: { marginRight: 10 },
+  deviceName: { color: "#ffffff", fontSize: 18, fontWeight: '600' },
+  headerSubtitle: { fontSize: 16, color: '#94a3b8' },
+  card: { backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 12, padding: 16, marginBottom: 24 },
+  cardTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff', marginBottom: 16 },
+  chart: { marginVertical: 8, borderRadius: 16 },
+  tipsContainer: { gap: 16 },
+  tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 8, paddingHorizontal: 12, marginBottom: 10 },
+  tipIcon: { marginRight: 10 },
+  tipText: { fontSize: 16, color: '#e2e8f0', fontWeight: '600' },
 });
 
 export default EnergySaved;

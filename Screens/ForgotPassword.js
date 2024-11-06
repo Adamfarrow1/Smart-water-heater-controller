@@ -10,7 +10,6 @@ const Forgotpassword = () => {
     if (email) {
       sendPasswordResetEmail(auth, email)
         .then(() => {
-          // Email sent successfully
           Alert.alert(
             'Success',
             'Password reset email has been sent!',
@@ -18,7 +17,6 @@ const Forgotpassword = () => {
           );
         })
         .catch((error) => {
-          // Handle errors (e.g., invalid email, user not found)
           console.error('Error sending password reset email:', error);
           Alert.alert('Error', error.message, [{ text: 'OK' }]);
         });

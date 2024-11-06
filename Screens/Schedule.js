@@ -1,10 +1,10 @@
-import React, { useState, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, Button, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { View, Text, Modal, TextInput, Button, TouchableOpacity } from 'react-native';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Agenda } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect } from 'react';
-import { getDatabase, ref, onValue,update, push  } from "firebase/database";
+import { getDatabase, ref, onValue, update, push, set, off } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 
 const currentDate = new Date().toISOString().split('T')[0];
@@ -14,12 +14,9 @@ const workout = { key: 'workout', color: 'green' };
 
 function Schedule() {
   const navigation = useNavigation();
-  const { selectedDevice, deviceInfo } = useDevice(); 
+  const { selectedDevice } = useDevice(); 
   const [selectedDay, setSelectedDay] = useState(currentDate);
-  const [items, setItems] = useState({
-    '2024-08-24': [{ name: 'Sample task for 24th' }],
-    '2024-08-26': [{ name: 'Sample task for 26th' }],
-  });
+  const [items, setItems] = useState({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newEventName, setNewEventName] = useState('');
   const [fromTime, setFromTime] = useState(new Date());
@@ -27,26 +24,32 @@ function Schedule() {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.navButton}>
+          <Text style={styles.navButtonText}>Add</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
   useEffect(() => {
-    if(!selectedDevice) return
+    if (!selectedDevice) return;
     const db = getDatabase();
     const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling`);
-    
-    // Define today's date in `YYYY-MM-DD` format
-    const today = new Date().toISOString().split('T')[0];
   
-    // Listen for changes on the scheduling path
     onValue(deviceRef, (snapshot) => {
-      const data = snapshot.val() ?? {}; // Ensure data is an object to iterate over
+      const data = snapshot.val() ?? {};
       const newItems = {};
   
       // Iterate over each date in the data
       Object.entries(data).forEach(([date, events]) => {
-        if (date >= today) { // Only include dates that are today or in the future
+        if (date >= selectedDay) { // Only include dates that are the selected day or in the future
           newItems[date] = [];
-          
-          // For each event on a given date, push it to the array for that date
-          Object.values(events).forEach((event) => {
+  
+          // Iterate over each event under the specific date
+          Object.entries(events).forEach(([eventId, event]) => {
             newItems[date].push({
               name: event.name,
               from: event.from,
@@ -62,31 +65,18 @@ function Schedule() {
     });
   
     return () => {
-      // Optional: detach the listener if necessary
+      off(deviceRef);
     };
-  }, [selectedDevice]);
+  }, [selectedDevice, selectedDay]);
   
   
-  
-  
-  
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.navButton}>
-          <Text style={styles.navButtonText}>Add</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
 
   const onDayPress = (day) => {
     setSelectedDay(day.dateString);
   };
 
   const addNewEvent = () => {
-    if(!selectedDevice) return
+    if (!selectedDevice) return;
     if (newEventName.trim()) {
       // Update local state for displaying in the agenda
       setItems((prevItems) => ({
@@ -97,24 +87,20 @@ function Schedule() {
         ],
       }));
   
-      // Reset input fields and close modal
-      setNewEventName('');
-      setIsModalVisible(false);
-  
       // Save the new event to Firebase under the specific selected date
       const db = getDatabase();
       const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling/${selectedDay}`);
-      
+  
       // Use `push` to add a new unique key for each event under the selected date in Firebase
       const newEventRef = push(deviceRef);
       const newEventData = {
         name: newEventName,
         from: fromTime.toLocaleTimeString(),
         to: toTime.toLocaleTimeString(),
-        timestamp: Date.now(), // Optional: timestamp for sorting
+        timestamp: Date.now(),
       };
-      
-      update(newEventRef, newEventData)
+  
+      set(newEventRef, newEventData)
         .then(() => {
           console.log("Event successfully added to Firebase");
         })
@@ -124,18 +110,16 @@ function Schedule() {
     }
   };
   
-  
-  
-  
 
   const renderItem = (item) => (
     <View style={styles.item}>
       <Text style={styles.itemText}>{item.name}</Text>
       <Text style={styles.itemText}>
-        {item.from} - {item.to}
+        {typeof item.from === 'string' ? item.from : ''} - {typeof item.to === 'string' ? item.to : ''}
       </Text>
     </View>
   );
+  
 
   const renderEmptyData = () => (
     <View style={styles.emptyItem}>
@@ -145,6 +129,7 @@ function Schedule() {
 
   return (
     <View style={styles.container}>
+      { items ? 
       <Agenda
         items={items}
         onDayPress={onDayPress}
@@ -177,8 +162,8 @@ function Schedule() {
           textDayHeaderFontSize: 16,
         }}
         style={{}}
-      />
-      
+      /> : null
+      }
       {/* Modal for adding new event */}
       <Modal
         transparent={true}
@@ -195,25 +180,24 @@ function Schedule() {
               value={newEventName}
               onChangeText={setNewEventName}
             />
-            
+
             {/* From Time Picker */}
             <TouchableOpacity onPress={() => setShowFromPicker(true)} style={styles.timeButton}>
               <Text style={styles.timeButtonText}>
                 From: {fromTime.toLocaleTimeString()}
               </Text>
             </TouchableOpacity>
-            {showFromPicker && (
-              <DateTimePicker
-                value={fromTime}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={(event, selectedTime) => {
-                  setShowFromPicker(false);
-                  if (selectedTime) setFromTime(selectedTime);
-                }}
-              />
-            )}
+            <DateTimePickerModal
+              isVisible={showFromPicker}
+              mode="time"
+              themeVariant="light"
+              is24Hour={true}
+              onConfirm={(selectedTime) => {
+                setShowFromPicker(false);
+                if (selectedTime) setFromTime(selectedTime);
+              }}
+              onCancel={() => setShowFromPicker(false)}
+            />
 
             {/* To Time Picker */}
             <TouchableOpacity onPress={() => setShowToPicker(true)} style={styles.timeButton}>
@@ -221,18 +205,17 @@ function Schedule() {
                 To: {toTime.toLocaleTimeString()}
               </Text>
             </TouchableOpacity>
-            {showToPicker && (
-              <DateTimePicker
-                value={toTime}
-                mode="time"
-                is24Hour={true}
-                display="default"
-                onChange={(event, selectedTime) => {
-                  setShowToPicker(false);
-                  if (selectedTime) setToTime(selectedTime);
-                }}
-              />
-            )}
+            <DateTimePickerModal
+              isVisible={showToPicker}
+              mode="time"
+              themeVariant="light"
+              is24Hour={true}
+              onConfirm={(selectedTime) => {
+                setShowToPicker(false);
+                if (selectedTime) setToTime(selectedTime);
+              }}
+              onCancel={() => setShowToPicker(false)}
+            />
 
             <Button title="Add Event" onPress={addNewEvent} />
             <Button title="Cancel" onPress={() => setIsModalVisible(false)} color="red" />
@@ -242,6 +225,7 @@ function Schedule() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

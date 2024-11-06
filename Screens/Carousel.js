@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    width: '90%',
+    width: '100%',
     height: 150,
     justifyContent: 'center',
     alignItems: 'center',

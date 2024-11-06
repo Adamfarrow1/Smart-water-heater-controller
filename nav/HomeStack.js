@@ -1,15 +1,16 @@
 import React from 'react';
-
 import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableOpacity } from 'react-native';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import Homescreen from '../Screens/Homescreen';
 import NotificationStack from '../nav/NotificationStack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from '../Screens/Homescreen';
 import Notifications from '../Screens/Notifications';
 import EditProfile from '../Screens/EditProfile';
-// Stack for Home and Notifications
+import { signOut } from 'firebase/auth';
+import { auth } from '../context/firebaseConfig';
+import { useDevice } from '../context/DeviceContext';
 const Stack = createStackNavigator();
 
 function HomeStack({ navigation }) {
@@ -28,7 +29,7 @@ function HomeStack({ navigation }) {
           },
           headerTintColor: '#fff',
           headerLeft: () => (
-            <TouchableOpacity onPress={({navigation}) => navigation.openDrawer()}>
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
               <Ionicons name="menu" size={25} color="#fff" style={{ marginLeft: 15 }} />
             </TouchableOpacity>
           ),
@@ -46,35 +47,80 @@ function HomeStack({ navigation }) {
     </Stack.Navigator>
   );
 }
+
 const Drawer = createDrawerNavigator();
+
+function CustomDrawerContent(props) {
+  const {setDeviceInfo , setSelectedDevice } = useDevice();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setSelectedDevice(null)
+      setDeviceInfo({})
+      console.log('User signed out successfully');
+      props.navigation.navigate('Landing'); // Redirect to login screen
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
+
+  return (
+    <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
+      <View style={{ flexGrow: 1 }}>
+        <DrawerItemList {...props} />
+      </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
+    </DrawerContentScrollView>
+  );
+}
+
 
 function DrawerNavigator() {
   return (
     <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         drawerStyle: {
-          backgroundColor: 'black', // Drawer background color
-          width: '75%', // Width of the drawer when opened halfway
+          backgroundColor: '#1b252d',
+          width: '75%',
         },
         headerStyle: {
-            backgroundColor: '#1b252d', // Set header background color to black or any desired color
-            borderBottomWidth: 0,
-            shadowColor: 'transparent',
-            elevation: 0,
-
-          },
-        drawerActiveTintColor: '#fff', // Text color when selected
-        drawerInactiveTintColor: '#aaa', // Text color when not selected
-        headerTintColor: '#fff'
+          backgroundColor: '#1b252d',
+          borderBottomWidth: 0,
+          shadowColor: 'transparent',
+          elevation: 0,
+        },
+        drawerActiveTintColor: '#fff',
+        drawerInactiveTintColor: '#aaa',
+        headerTintColor: '#fff',
       }}
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Notifications" component={Notifications} />
       <Drawer.Screen name="EditProfile" component={EditProfile} />
-      {/* Add more drawer items here as needed */}
     </Drawer.Navigator>
   );
 }
 
-export default DrawerNavigator;
+const styles = StyleSheet.create({
+  logoutButton: {
+    padding: 15,
+    borderRadius: 15,
+    backgroundColor: '#6E7F87', // Darker color for contrast
+    alignItems: 'center',
+    marginBottom: 100,           // Adds a bit of spacing from the bottom
+    width: "70%",
+    alignSelf: "center",
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
 
+
+
+export default DrawerNavigator;

@@ -12,18 +12,17 @@ const LandingPage = ({ navigation }) => {
           <View style={styles.mainContainer}>
             <Text style={styles.title}>Smart Water Heater Controller</Text>
             <Text style={styles.subtitle}>Control all your smart devices and save energy</Text>
-            <View style={styles.buttonContainer}>
+            
+          </View>
+          <View style={styles.buttonContainer}>
               <TouchableOpacity style={[styles.button, styles.gettingStartedButton]} onPress={() => navigation.navigate('Register')}>
                 <Text style={styles.buttonText}>Getting started</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => navigation.navigate('Login')}>
                 <Text style={styles.buttonText} >Log In</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.loginButton]} onPress={() => navigation.navigate('ForgotPassword')}>
-                <Text style={styles.buttonText} >Forgot Password? Press here</Text>
-              </TouchableOpacity>
+              
             </View>
-          </View>
         </LinearGradient>
       </ImageBackground>
     </View>
@@ -47,7 +46,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     width: '80%',
     alignItems: 'center',
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
     marginTop: 500,
   },
@@ -74,12 +73,12 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: 'center',
-    marginVertical: 10,
-    width: '100%',
-  },
+    marginVertical: 5,
+    width: '80%',
+  },  
   gettingStartedButton: {
     backgroundColor: '#6EBEFF',
   },

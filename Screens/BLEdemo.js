@@ -1,186 +1,264 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, Button, Modal, TextInput, StyleSheet, FlatList } from 'react-native';
-import {
-  ESPProvisionManager,
-  ESPDevice,
-  ESPTransport,
-  ESPSecurity,
-} from '@orbital-systems/react-native-esp-idf-provisioning';
-import { useUser } from "../context/userContext";
-import { getDatabase, ref, onValue, update, database } from 'firebase/database';
-import axios from 'axios';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList, Modal, StyleSheet, SafeAreaView, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
-const BLEdemo = () => {
-  const { user, loading } = useUser();
-  const [devices, setDevices] = useState([]);
+export default function Component({ navigation }) {
   const [isScanning, setIsScanning] = useState(false);
+  const [devices, setDevices] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
-  const [userDevices, setUserDevices] = useState({});
 
-
-  const scanForDevices = async () => {
-    try {
-      setIsScanning(true);
-      const prefix = '';
-      const transport = ESPTransport.ble;
-      const security = ESPSecurity.secure2;
-
-      const foundDevices = await ESPProvisionManager.searchESPDevices(prefix, transport, security);
-
-      if (foundDevices.length === 0) {
-        Alert.alert('No Devices Found', 'No BLE devices found.');
-      } else {
-        console.log('Found devices:', foundDevices);
-        setDevices(foundDevices);
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', `Failed to scan for devices: ${error.message}`);
-    } finally {
+  const scanForDevices = () => {
+    setIsScanning(true);
+    // Simulating device discovery
+    setTimeout(() => {
+      setDevices([
+        { id: '1', name: 'ESP32-Device1' },
+        { id: '2', name: 'ESP32-Device2' },
+      ]);
       setIsScanning(false);
-    }
+    }, 2000);
+  };
+
+  const showWifiDialog = (device) => {
+    setSelectedDevice(device);
+    setModalVisible(true);
   };
 
   const connectToDevice = async () => {
     if (!selectedDevice) return;
-
     try {
-      console.log("trying to connect");
-      await selectedDevice.connect("abcd1234");
-      console.log(ssid + " " + password);
+      console.log(`Connecting to device: ${selectedDevice.name}`);
+      console.log(`SSID: ${ssid}, Password: ${password}`);
 
-      await selectedDevice.provision(ssid, password);
-      Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
+      // Simulating device connection and provisioning
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      await selectedDevice.disconnect();
-      const uid = user?.uid;
-      console.log("Sending UID to ESP32:", uid);
-      await sendUIDToESP32(uid);
+      setModalVisible(false);
+      navigation.navigate('DeviceInfo', { deviceId: selectedDevice.id });
     } catch (error) {
       console.error(error);
       Alert.alert('Error', `Failed to provision device: ${error.message}`);
     }
   };
 
-
-  const sendUIDToESP32 = async (uid) => {
-    const data = { uid: uid };
-    try {
-        const response = await fetch(`http://esp32.local/receiveUID`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-
-        // Log the raw response for debugging
-        const responseText = await response.text(); // Get the raw response text
-        console.log("Raw response from ESP32:", responseText); // Log raw response
-
-        if (response.ok) {
-            const responseBody = JSON.parse(responseText); // Parse the JSON response
-            console.log("Response from ESP32:", responseBody);
-            const deviceId = responseBody.deviceId;
-            navigation.navigate('DeviceInfo', { deviceId: deviceId});
-        } else {
-            console.error("Failed to send UID. Status:", response.status);
-        }
-    } catch (error) {
-        console.error("Error sending UID to ESP32:", error);
-    }
-};
-
-  
-  const showWifiDialog = (device) => {
-    setSelectedDevice(device);
-    setModalVisible(true);
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Connect through bluetooth to the esp32</Text>
-      <Button title={isScanning ? 'Scanning...' : 'Scan for Devices'} onPress={scanForDevices} disabled={isScanning} />
+    <SafeAreaView style={styles.container}>
       <FlatList
+        ListHeaderComponent={
+          <>
+            <View style={styles.header}>
+              <Text style={styles.title}>Connect to ESP32 via Bluetooth</Text>
+              <Text style={styles.subtitle}>Scan and connect to nearby ESP32 devices</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={scanForDevices}
+              disabled={isScanning}
+            >
+              <View style={styles.scanButtonContent}>
+                {isScanning ? (
+                  <ActivityIndicator color="#ffffff" style={styles.scanButtonIcon} />
+                ) : (
+                  <Feather name="bluetooth" size={24} color="#ffffff" style={styles.scanButtonIcon} />
+                )}
+                <Text style={styles.scanButtonText}>
+                  {isScanning ? 'Scanning...' : 'Scan for Devices'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </>
+        }
         data={devices}
-        keyExtractor={(item, index) => `${item.identifier}-${index}`}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.deviceItem}>
-            <Text style={styles.deviceText}>{item.name || 'Unnamed Device'}</Text>
-            <Text style={styles.deviceText}>ID: {item.identifier}</Text>
-            <Button title="Connect" onPress={() => showWifiDialog(item)} />
-          </View>
+          <TouchableOpacity
+            style={styles.deviceItem}
+            onPress={() => showWifiDialog(item)}
+          >
+            <View style={styles.deviceInfo}>
+              <Ionicons name="hardware-chip-outline" size={24} color="#3498db" style={styles.deviceIcon} />
+              <View>
+                <Text style={styles.deviceName}>{item.name}</Text>
+              </View>
+            </View>
+            <Feather name="wifi" size={24} color="#2ecc71" />
+          </TouchableOpacity>
         )}
+        contentContainerStyle={styles.flatListContent}
       />
+
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Enter Wi-Fi Credentials</Text>
-          <TextInput
-            style={styles.textInput}
-            placeholder="SSID"
-            value={ssid}
-            onChangeText={setSsid}
-          />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Password"
-            value={password}
-            secureTextEntry
-            onChangeText={setPassword}
-          />
-          <Button title="Submit" onPress={() => { connectToDevice(); setModalVisible(false); }} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Enter Wi-Fi Credentials</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="SSID"
+              placeholderTextColor="#bdc3c7"
+              value={ssid}
+              onChangeText={setSsid}
+            />
+            <TextInput
+              style={styles.textInput}
+              placeholder="Password"
+              placeholderTextColor="#bdc3c7"
+              value={password}
+              secureTextEntry
+              onChangeText={setPassword}
+            />
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={connectToDevice}
+              >
+                <Text style={styles.modalButtonText}>Connect</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#1b252d',
+  },
+  header: {
+    marginBottom: 30,
+    marginTop: 30,
   },
   title: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#ffffff',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#ffffff',
+    opacity: 0.8,
+  },
+  scanButton: {
+    backgroundColor: '#3498db',
+    borderRadius: 15,
+    marginBottom: 30,
+    overflow: 'hidden',
+  },
+  scanButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+  },
+  scanButtonIcon: {
+    marginRight: 10,
+  },
+  scanButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  flatListContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   deviceItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    marginBottom: 15,
   },
-  deviceText: {
-    fontSize: 16,
-  },
-  modalContainer: {
+  deviceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
+  },
+  deviceIcon: {
+    marginRight: 15,
+  },
+  deviceName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 5,
+  },
+  deviceId: {
+    fontSize: 14,
+    color: '#bdc3c7',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 20,
+  },
+  modalContainer: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: '#2c3e50',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'stretch',
   },
   modalTitle: {
-    fontSize: 18,
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   textInput: {
     width: '100%',
-    padding: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    padding: 15,
+    marginBottom: 15,
+    backgroundColor: '#34495e',
+    borderRadius: 10,
+    color: '#ffffff',
+    fontSize: 16,
   },
-});
-
-export default BLEdemo;
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  confirmButton: {
+    backgroundColor: '#2ecc71',
+    marginRight: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#e74c3c',
+    marginLeft: 10,
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+})

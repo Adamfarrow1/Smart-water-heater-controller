@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { getDatabase, ref, set } from 'firebase/database';
 import { useUser } from '../../context/userContext';
 import { useNavigation } from '@react-navigation/native';
+import { Feather } from '@expo/vector-icons';
 
 const DeviceInfo = ({ route }) => {
-    const { deviceId } = route.params; // Get deviceId from navigation params
+    const { deviceId } = route.params;
     const { user } = useUser();
     const [deviceName, setDeviceName] = useState('');
     const [zipCode, setZipCode] = useState('');
     const navigation = useNavigation();
 
     const handleSubmit = () => {
+        if (!deviceName.trim() || !zipCode.trim()) {
+            Alert.alert('Error', 'Please fill in all fields');
+            return;
+        }
+
         const db = getDatabase();
-        const userId = user.uid; 
+        const userId = user.uid;
         const deviceRef = ref(db, `users/${userId}/devices/${deviceId}`);
 
         const deviceData = {
@@ -33,43 +39,97 @@ const DeviceInfo = ({ route }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Enter Device Information</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Device Name"
-                value={deviceName}
-                onChangeText={setDeviceName}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Zip Code"
-                value={zipCode}
-                onChangeText={setZipCode}
-                keyboardType="numeric"
-            />
-            <Button title="Submit" onPress={handleSubmit} />
-        </View>
+        <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView 
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.keyboardAvoidingView}
+            >
+                <View style={styles.content}>
+                    <Text style={styles.title}>Enter Device Information</Text>
+                    <View style={styles.inputContainer}>
+                        <Feather name="smartphone" size={24} color="#bdc3c7" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Device Name"
+                            placeholderTextColor="#bdc3c7"
+                            value={deviceName}
+                            onChangeText={setDeviceName}
+                        />
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Feather name="map-pin" size={24} color="#bdc3c7" style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Zip Code"
+                            placeholderTextColor="#bdc3c7"
+                            value={zipCode}
+                            onChangeText={setZipCode}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                    <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                        <Text style={styles.submitButtonText}>Submit</Text>
+                    </TouchableOpacity>
+                </View>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#1b252d',
+    },
+    keyboardAvoidingView: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: 20,
-        backgroundColor: '#fff',
     },
     title: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        marginBottom: 20,
+        color: '#ffffff',
+        marginBottom: 30,
+        textAlign: 'center',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2c3e50',
+        borderRadius: 10,
+        marginBottom: 15,
+        paddingHorizontal: 10,
+        width: '100%',
+        maxWidth: 300,
+    },
+    inputIcon: {
+        marginRight: 10,
     },
     input: {
-        height: 40,
-        borderColor: '#ccc',
-        borderWidth: 1,
-        marginBottom: 15,
-        paddingLeft: 10,
+        flex: 1,
+        height: 50,
+        color: '#ffffff',
+        fontSize: 16,
+    },
+    submitButton: {
+        backgroundColor: '#3498db',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 10,
+        marginTop: 20,
+        width: '100%',
+        maxWidth: 300,
+    },
+    submitButtonText: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 

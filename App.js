@@ -15,6 +15,7 @@ import BLEdemo from './Screens/BLEdemo.js';
 import AddDevice from './Screens/DeviceSetup/AddDevice.js';
 import SetupOptions from './Screens/DeviceSetup/SetupOptions.js';
 import DeviceInfo from './Screens/DeviceSetup/DeviceInfo.js';
+import AllFrequencies from './Screens/Allfrequencies.js';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -29,15 +30,49 @@ const App = () => {
        
          <Stack.Navigator initialRouteName="Landing">
            <Stack.Screen name="Landing" component={LandingPage} options={{ headerShown: false }} />
-           <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
-           <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
+           <Stack.Screen name="Login" component={Login} options={{ headerStyle: {
+            backgroundColor: '#1b252d',
+          },
+          headerTintColor: '#ffffff',
+          headerTitle: '', 
+          headerBackTitleVisible: false, }} />
+           <Stack.Screen name="Register" component={Register} options={{headerStyle: {
+            backgroundColor: '#1b252d', 
+          },
+          headerTintColor: '#ffffff', 
+          headerTitle: '', 
+          headerBackTitleVisible: false, }} />
            <Stack.Screen name="Home" component={LoggedinNavigator} options={{ headerShown: false,gestureEnabled: false }} />
            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
            {/*<Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />*/}
-           <Stack.Screen name="BLEdemo" component={BLEdemo} options={{title: 'Device Setup' }} />
-           <Stack.Screen name="AddDevice" component={AddDevice} options={{title: 'Add Device' }} />
+           <Stack.Screen name="BLEdemo" component={BLEdemo} options={{headerStyle: {
+            backgroundColor: '#1b252d', 
+          },
+          headerTintColor: '#ffffff', 
+          headerTitle: 'Device Setup', 
+          headerBackTitleVisible: false, }} />
+           <Stack.Screen name="AddDevice" component={AddDevice} options={{headerStyle: {
+            backgroundColor: '#1b252d', 
+          },
+          headerTintColor: '#ffffff', 
+          headerTitle: 'Add Device', 
+          headerBackTitleVisible: false, }} />
            <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{title: 'Device info' }} />
-           <Stack.Screen name="SetupOptions" component={SetupOptions} options={{headerShown: false}} />
+           <Stack.Screen name="SetupOptions" component={SetupOptions} options={{headerStyle: {
+            backgroundColor: '#1b252d', 
+          },
+          headerTintColor: '#ffffff', 
+          headerTitle: 'Device Setup', 
+          headerBackTitleVisible: false, }} />
+           <Stack.Screen name="AllFrequencies" component={AllFrequencies} options={{
+          headerStyle: {
+            backgroundColor: '#1b252d',
+          },
+          headerTintColor: '#ffffff',
+          headerTitle: '', 
+          headerBackTitleVisible: false,
+        }} />
+
          </Stack.Navigator>
        </NavigationContainer>
        </DeviceProvider>

@@ -1,104 +1,158 @@
-import * as React from 'react';
-import { View, StyleSheet, Text, Pressable} from 'react-native';
-import RadialVariant from '../components/RadialVar';
-import { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue,update  } from "firebase/database";
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { getDatabase, ref, onValue, update } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
+import RadialVariant from '../components/RadialVar';
+import { Feather } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+
 function TempControl() {
-  const { selectedDevice, deviceInfo } = useDevice(); 
-  const [data, setData] = useState(120);
-  const [speed, setSpeed] = useState(120);
-  useEffect(() => {
-    if(!selectedDevice) return
-    const db = getDatabase();
-    console.log()
-    const deviceref = ref(db, `controllers/${selectedDevice}`);
-    onValue(deviceref, (snapshot) => {
-      const data = snapshot.val();
-      if(data){
-        console.log(data.temperature)
-      setData(data.temperature);
-      setSpeed(data.temperature)
-      }
-      console.log(deviceInfo);
-      console.log(selectedDevice);
-    });
+  const { selectedDevice, deviceInfo } = useDevice();
+  const [currentTemp, setCurrentTemp] = useState(120);
+  const [setTemp, setSetTemp] = useState(120);
 
-    console.log("runnin")
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedDevice) return;
+      const db = getDatabase();
+      const deviceRef = ref(db, `controllers/${selectedDevice}`);
+      const unsubscribe = onValue(deviceRef, (snapshot) => {
+        const data = snapshot.val();
+        console.log(data.set_temperature);
+        if (data && typeof data.set_temperature === 'number') {
+          setCurrentTemp(data.set_temperature);
+          setSetTemp(data.set_temperature);
+        } else if (!data.set_temperature) {
+          // Handle invalid data type
+          console.warn("Invalid temperature data from Firebase");
+          changeTemp();
+          setCurrentTemp(120); // Set a default value if the data is not valid
+          setSetTemp(120);
+        }
+      });
 
-    return;
-  }, []);
-
-  useEffect(() => {
-      console.log("speed")
-    },[speed]);
-
+      return () => unsubscribe();
+    }, [selectedDevice])
+  );
 
   function changeTemp() {
-    if(!selectedDevice) return
+    if (!selectedDevice) return;
+    if (setTemp === currentTemp) return;
     const db = getDatabase();
-    console.log("speed")
     const updates = {};
-    console.log(selectedDevice)
-    updates[`controllers/${selectedDevice}/set_temperature`] = speed;
-    update(ref(db), updates)
-      .catch((error) => {  // Ensure 'error' is properly referenced here
-        console.error('Error updating temperature:', error);
-      });
-      setData(speed)
-  }
-    return (
-      <View style={styles.container}>
-        
-        <Text style={styles.text}>Device Selected:</Text>
-        <Text style={styles.deviceName}>{selectedDevice || "No Device Selected"}</Text>
-        <Text style={styles.text}>Current Temp: {data}</Text>
-        <Pressable style={styles.btnPressable } onPress={changeTemp}  >
-          <Text style={styles.btnText}>Set Temp</Text>
-        </Pressable>
-        <RadialVariant speed={speed} setSpeed={setSpeed} />
-       <Text style={styles.caption}>Adjust the smart water heater temperature to suit you</Text>
-       
-      
-      </View>
-    );
+    updates[`controllers/${selectedDevice}/set_temperature`] = setTemp;
+    update(ref(db), updates).catch((error) => {
+      console.error('Error updating temperature:', error);
+    });
+
+    setCurrentTemp(setTemp);
+    setSetTemp(setTemp);
   }
 
-  const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#1b252d",
-        color: 'white'
-    },
-    btnPressable:{
-      color: 'white',
-      backgroundColor: 'white',
-      padding: 5,
-      alignSelf:'center'
-    }
-    ,
-    text:{
-      fontSize: 15,
-      marginTop: 50,
-      alignSelf: 'left',
-      marginLeft: 20,
-      color: 'white',
-      fontWeight: '600'
-    },
-    deviceName: {
-      color: "white",
-      fontSize: 24,
-      alignSelf: 'left',
-      marginLeft: 20,
-      fontWeight: '600'
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <View style={styles.deviceInfo}>
+            <Feather name="thermometer" size={24} color="#ffffff" style={styles.icon} />
+            <Text style={styles.deviceName}>
+              {selectedDevice || "No Device Selected"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.mainContent}>
+          <View style={styles.tempInfo}>
+            <Text style={styles.label}>Current Temperature</Text>
+            <Text style={styles.temperature}>{currentTemp}°F</Text>
+          </View>
+
+          <RadialVariant speed={setTemp} setSpeed={setSetTemp} />
+
+          <TouchableOpacity style={styles.button} onPress={changeTemp}>
+            <Text style={styles.buttonText}>Set Temperature</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#1b252d",
+    paddingBottom: 20, // Add padding to account for bottom nav
+  },
+  content: {
+    flexGrow: 1,
+    padding: 20,
+    justifyContent: 'space-between',
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    color: '#ffffff',
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  deviceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: 10,
+  },
+  deviceName: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  tempInfo: {
+    backgroundColor: 'rgba(40, 68, 104, 0.4)',
+    borderRadius: 15,
+    padding: 20,
+  },
+  label: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginBottom: 5,
+    opacity: 0.8,
+  },
+  temperature: {
+    color: '#ffffff',
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+  radialContainer: {
+    alignItems: 'center',
   },
   caption: {
-    fontSize: 15,
-        color: '#FFFFFF',
-        marginTop: 20,  
-        textAlign: 'center',  
+    fontSize: 14,
+    color: '#ffffff',
+    textAlign: 'center',
+    opacity: 0.8,
+    marginTop: 15,
   },
-
+  button: {
+    backgroundColor: 'rgba(40, 68, 104, 0.4)',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  mainContent: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingVertical: 10,
+  },
 });
 
 export default TempControl;
