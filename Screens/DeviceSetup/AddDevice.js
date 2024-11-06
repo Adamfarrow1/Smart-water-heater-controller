@@ -66,6 +66,13 @@ const AddDevice = () => {
       await sendUIDToESP32(uid);
     };
 
+    const showConfirmDialog = (device) => {
+      setSelectedDevice(device);
+      setModalVisible(true);
+    };
+  
+  
+
       const sendUIDToESP32 = async (uid) => {
         const data = { uid: uid };
         try {
