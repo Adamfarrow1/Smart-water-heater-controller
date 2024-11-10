@@ -2,13 +2,29 @@ import { StyleSheet, Text, View, TextInput, Pressable, TouchableOpacity } from '
 import {auth,  signInWithEmailAndPassword } from '../context/firebaseConfig';
 import { useState } from 'react';
 import { useUser } from '../context/userContext';
-
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+GoogleSignin.configure({
+  webClientId: '180780593721-ud4094rvrqalrr5b9uu77cu3b54odbei.apps.googleusercontent.com',
+  offlineAccess: true,
+});
 export default function Login( { navigation }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { user } = useUser(); 
   const [error, setError] = useState('');
+
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const googleCredential = auth.GoogleAuthProvider.credential(userInfo.idToken);
+      return auth().signInWithCredential(googleCredential);
+    } catch (error) {
+      console.error('Error during Google sign-in', error);
+    }
+  };
+
 
   const handleLogin = async () => {
     console.log("logging in")
@@ -54,7 +70,7 @@ export default function Login( { navigation }) {
             <Text style={styles.breaker_text}>or login with</Text>
           <View style={styles.line} />
         </View>
-        <TouchableOpacity style={styles.googleButton }  >
+        <TouchableOpacity style={styles.googleButton } onPress={signInWithGoogle}  >
         
           <Text style={styles.googleButtonText}>Google</Text>
         </TouchableOpacity>
