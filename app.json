@@ -13,8 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ximenavr.SWHC",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.ximenavr.SWHC"
     },
     "android": {
       "adaptiveIcon": {
