@@ -35,9 +35,6 @@ export default function Register({ navigation }) {
 
       navigation.navigate("Home")
 
-
-
-      console.log("it works")
     } catch (error) {
       if (error.code === 'auth/invalid-email') {
         setError('Invalid email');
@@ -48,7 +45,6 @@ export default function Register({ navigation }) {
       } else {
         setError('Registration failed. Please try again');
       }
-      console.log(error);
     }
   };
 
@@ -68,15 +64,6 @@ export default function Register({ navigation }) {
         <Pressable style={styles.button}  onPress={handleRegister}>
           <Text style={styles.buttonText}>Register</Text>
         </Pressable>
-        {/* <View style={styles.horizontal_line_container}>
-          <View style={styles.line} />
-            <Text style={styles.breaker_text}>or login with</Text>
-          <View style={styles.line} />
-        </View>
-        <TouchableOpacity style={styles.googleButton}>
-        
-          <Text style={styles.googleButtonText}>Google</Text>
-        </TouchableOpacity> */}
       </View>
     </View>
   );

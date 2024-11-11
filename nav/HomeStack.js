@@ -57,8 +57,7 @@ function CustomDrawerContent(props) {
       await signOut(auth);
       setSelectedDevice(null)
       setDeviceInfo({})
-      console.log('User signed out successfully');
-      props.navigation.navigate('Landing'); // Redirect to login screen
+      props.navigation.navigate('Landing');
     } catch (error) {
       console.error('Error signing out: ', error);
     }
@@ -99,7 +98,7 @@ function DrawerNavigator() {
     >
       <Drawer.Screen name="Home" component={HomeScreen} />
       <Drawer.Screen name="Notifications" component={Notifications} />
-      <Drawer.Screen name="EditProfile" component={EditProfile} />
+      <Drawer.Screen name="Edit Profile" component={EditProfile} />
     </Drawer.Navigator>
   );
 }
@@ -108,9 +107,9 @@ const styles = StyleSheet.create({
   logoutButton: {
     padding: 15,
     borderRadius: 15,
-    backgroundColor: '#6E7F87', // Darker color for contrast
+    backgroundColor: 'rgba(40, 68, 104, 1)',
     alignItems: 'center',
-    marginBottom: 100,           // Adds a bit of spacing from the bottom
+    marginBottom: 100,
     width: "70%",
     alignSelf: "center",
   },

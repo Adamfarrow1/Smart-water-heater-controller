@@ -2,16 +2,67 @@ import { StyleSheet, Text, View, TextInput, Pressable, TouchableOpacity } from '
 import {auth,  signInWithEmailAndPassword } from '../context/firebaseConfig';
 import { useState } from 'react';
 import { useUser } from '../context/userContext';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { getDatabase, ref, set, get, child } from 'firebase/database';
+
+
+GoogleSignin.configure({
+  webClientId: '200839480102-hddu4k4btp65or4fkfmmfki0snteu69m.apps.googleusercontent.com',
+  offlineAccess: true,
+});
 
 export default function Login( { navigation }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { user } = useUser(); 
+  const { user, setUser } = useUser(); 
   const [error, setError] = useState('');
 
+  const signInWithGoogle = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const googleCredential = GoogleAuthProvider.credential(userInfo.data.idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      const user = userCredential.user;
+  
+      const db = getDatabase();
+      const userRef = ref(db, 'users/' + user.uid);
+      const snapshot = await get(userRef);
+      
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        setUser({
+          uid: user.uid, 
+          displayName: userData.displayName,
+          email: userData.email,
+          zip: userData.zip
+        });
+      } else {
+        await set(userRef, {
+          uid: user.uid,
+          displayName: user.displayName || 'Unknown User',
+          email: user.email,
+          zip: "32837"
+        });
+  
+        setUser({
+          uid: user.uid,
+          displayName: user.displayName || 'Unknown User',
+          email: user.email,
+          zip: "32837"
+        });
+      }
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error('Error during Google sign-in', error);
+    }
+  };
+  
+  
+
   const handleLogin = async () => {
-    console.log("logging in")
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setEmail('');
@@ -30,7 +81,6 @@ export default function Login( { navigation }) {
       } else {
         setError('Login failed. Check credentials and try again.');
       }
-      console.log(error);
     }
     
   };
@@ -54,7 +104,7 @@ export default function Login( { navigation }) {
             <Text style={styles.breaker_text}>or login with</Text>
           <View style={styles.line} />
         </View>
-        <TouchableOpacity style={styles.googleButton }  >
+        <TouchableOpacity style={styles.googleButton } onPress={signInWithGoogle} >
         
           <Text style={styles.googleButtonText}>Google</Text>
         </TouchableOpacity>

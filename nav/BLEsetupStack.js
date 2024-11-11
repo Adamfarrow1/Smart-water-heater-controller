@@ -6,7 +6,6 @@ import { NavigationContainer } from '@react-navigation/native';
 const Stack = createStackNavigator();
 
 const InstructionScreen = ({ navigation }) => {
-    console.log(navigation);
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Instructions</Text>
@@ -20,7 +19,6 @@ const InstructionScreen = ({ navigation }) => {
                 <Button
                     title="Next"
                     onPress={() => {
-                        console.log("should go next ;(");
                         navigation.navigate('ScanScreen');
                     }}
                 />

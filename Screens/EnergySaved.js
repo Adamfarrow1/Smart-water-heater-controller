@@ -88,9 +88,8 @@ function EnergySaved() {
           <Text style={styles.headerSubtitle}>Monitor your device's performance</Text>
         </View>
 
-        {/* View All Frequencies Button using TipCard */}
         <TipCard 
-          icon="zap"  // Using "zap" icon for the lightning bolt
+          icon="zap"
           text="View All Frequencies"
           onPress={() => navigation.navigate('AllFrequencies')}
         />
@@ -149,7 +148,8 @@ const styles = StyleSheet.create({
   tipsContainer: { gap: 16 },
   tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 8, paddingHorizontal: 12, marginBottom: 10 },
   tipIcon: { marginRight: 10 },
-  tipText: { fontSize: 16, color: '#e2e8f0', fontWeight: '600' },
+  tipText: {fontSize: 16,color: '#e2e8f0',fontWeight: '600',flexShrink: 1}
+  
 });
 
 export default EnergySaved;

@@ -45,7 +45,6 @@ const AddDevice = () => {
           if (foundDevices.length === 0) {
             Alert.alert('No Devices Found', 'No BLE devices found.');
           } else {
-          //  console.log('Found devices:', foundDevices);
             setDevices(foundDevices);
           }
         } catch (error) {
@@ -59,10 +58,8 @@ const AddDevice = () => {
     const connectToDevice = async () => {
     if (!selectedDevice) return;
 
-      // Add user.uid to the payload
       await selectedDevice.disconnect();
       const uid = user?.uid;
-      console.log("Sending UID to ESP32:", uid);
       await sendUIDToESP32(uid);
     };
 
@@ -84,14 +81,10 @@ const AddDevice = () => {
                 body: JSON.stringify(data),
             });
     
-            // Log the raw response for debugging
-            const responseText = await response.text(); // Get the raw response text
-            console.log("Raw response from ESP32:", responseText); // Log raw response
+            const responseText = await response.text(); 
     
             if (response.ok) {
-                const responseBody = JSON.parse(responseText); // Parse the JSON response
-                console.log("Response from ESP32:", responseBody);
-                // Navigate back to Home Screen after successful connection
+                const responseBody = JSON.parse(responseText); 
                 const deviceId = responseBody.deviceId;
                 navigation.navigate('DeviceInfo', { deviceId: deviceId});
             } else {
@@ -296,7 +289,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmButton: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: 'rgba(40, 68, 104, 1)',
     marginRight: 10,
   },
   cancelButton: {

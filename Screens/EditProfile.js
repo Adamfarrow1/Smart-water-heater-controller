@@ -28,7 +28,7 @@ const EditProfile = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    if (!user || !user.uid) return; // Ensure user is defined and has a uid
+    if (!user || !user.uid) return;
 
     const db = getDatabase();
     const deviceRef = ref(db, 'users/' + user.uid);

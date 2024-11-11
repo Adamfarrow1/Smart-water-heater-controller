@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
 
-// Create the DeviceContext
+
 const DeviceContext = createContext();
 
-// Create a provider component
+
 export const DeviceProvider = ({ children }) => {
-    const [selectedDevice, setSelectedDevice] = useState(null); // Initialize to null or a default value
-    const [deviceInfo, setDeviceInfo] = useState({}); // Initialize deviceInfo to an empty object
+    const [selectedDevice, setSelectedDevice] = useState(null);
+    const [deviceInfo, setDeviceInfo] = useState({});
     const [name, setName] = useState('');
 
     return (
@@ -16,7 +16,7 @@ export const DeviceProvider = ({ children }) => {
     );
 };
 
-// Create a custom hook to use the DeviceContext
+
 export const useDevice = () => {
     return useContext(DeviceContext);
 };

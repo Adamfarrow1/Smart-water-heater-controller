@@ -1,10 +1,10 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { View, Text, Modal, TextInput, Button, TouchableOpacity } from 'react-native';
+import { View, Text, Modal, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Agenda } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
-import { getDatabase, ref, onValue, update, push, set, off } from "firebase/database";
+import { getDatabase, ref, onValue, update, push, set, off, remove } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 
 const currentDate = new Date().toISOString().split('T')[0];
@@ -18,11 +18,15 @@ function Schedule() {
   const [selectedDay, setSelectedDay] = useState(currentDate);
   const [items, setItems] = useState({});
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [newEventName, setNewEventName] = useState('');
   const [fromTime, setFromTime] = useState(new Date());
   const [toTime, setToTime] = useState(new Date());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState("");
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -43,14 +47,13 @@ function Schedule() {
       const data = snapshot.val() ?? {};
       const newItems = {};
   
-      // Iterate over each date in the data
       Object.entries(data).forEach(([date, events]) => {
-        if (date >= selectedDay) { // Only include dates that are the selected day or in the future
+        if (date === selectedDay) {
           newItems[date] = [];
   
-          // Iterate over each event under the specific date
           Object.entries(events).forEach(([eventId, event]) => {
             newItems[date].push({
+              id: eventId,
               name: event.name,
               from: event.from,
               to: event.to,
@@ -68,30 +71,17 @@ function Schedule() {
       off(deviceRef);
     };
   }, [selectedDevice, selectedDay]);
-  
-  
 
-  const onDayPress = (day) => {
-    setSelectedDay(day.dateString);
+  const onDayPress = () => {
+    setIsDeleteModalVisible(true);
   };
 
   const addNewEvent = () => {
     if (!selectedDevice) return;
     if (newEventName.trim()) {
-      // Update local state for displaying in the agenda
-      setItems((prevItems) => ({
-        ...prevItems,
-        [selectedDay]: [
-          ...(prevItems[selectedDay] || []),
-          { name: newEventName, from: fromTime.toLocaleTimeString(), to: toTime.toLocaleTimeString() },
-        ],
-      }));
-  
-      // Save the new event to Firebase under the specific selected date
       const db = getDatabase();
       const deviceRef = ref(db, `controllers/${selectedDevice}/scheduling/${selectedDay}`);
   
-      // Use `push` to add a new unique key for each event under the selected date in Firebase
       const newEventRef = push(deviceRef);
       const newEventData = {
         name: newEventName,
@@ -102,22 +92,52 @@ function Schedule() {
   
       set(newEventRef, newEventData)
         .then(() => {
-          console.log("Event successfully added to Firebase");
+          setIsModalVisible(false);
+          setNewEventName('');
         })
         .catch((firebaseError) => {
           console.error("Error adding event to Firebase:", firebaseError);
         });
     }
   };
+
+  const deleteSchedule = () => {
+    if (!selectedDevice || !selectedEventId) return;
+    const db = getDatabase();
+    const eventRef = ref(db, `controllers/${selectedDevice}/scheduling/${selectedDay}/${selectedEventId}`);
+  
+    remove(eventRef)
+      .then(() => {
+        setIsDeleteModalVisible(false);
+  
+        const newItems = { ...items };
+        if (newItems[selectedDay]) {
+          newItems[selectedDay] = newItems[selectedDay].filter(event => event.id !== selectedEventId);
+          if (newItems[selectedDay].length === 0) {
+            delete newItems[selectedDay];
+          }
+        }
+        setItems(newItems);
+      })
+      .catch((firebaseError) => {
+        console.error("Error deleting event from Firebase:", firebaseError);
+      });
+  };
   
 
+  const handleItemPress = (item) => {
+    setSelectedEventId(item.id);
+    setSelectedEvent(item.name)
+    setIsDeleteModalVisible(true);
+  };
+  
   const renderItem = (item) => (
-    <View style={styles.item}>
+    <TouchableOpacity style={styles.item} onPress={() => handleItemPress(item)}>
       <Text style={styles.itemText}>{item.name}</Text>
       <Text style={styles.itemText}>
         {typeof item.from === 'string' ? item.from : ''} - {typeof item.to === 'string' ? item.to : ''}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
   
 
@@ -132,8 +152,7 @@ function Schedule() {
       { items ? 
       <Agenda
         items={items}
-        onDayPress={onDayPress}
-        selected={selectedDay}
+        onDayPress={(day) => setSelectedDay(day.dateString)}
         markedDates={{
           [selectedDay]: { selected: true, marked: true, dots: [work, massage, workout] },
         }}
@@ -146,7 +165,7 @@ function Schedule() {
           selectedDayBackgroundColor: '#00adf5',
           selectedDayTextColor: '#ffffff',
           todayTextColor: '#00adf5',
-          dayTextColor: '#2d4150',
+          dayTextColor: '#ffffff',
           dotColor: '#00adf5',
           selectedDotColor: '#ffffff',
           arrowColor: 'orange',
@@ -164,7 +183,6 @@ function Schedule() {
         style={{}}
       /> : null
       }
-      {/* Modal for adding new event */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -181,7 +199,6 @@ function Schedule() {
               onChangeText={setNewEventName}
             />
 
-            {/* From Time Picker */}
             <TouchableOpacity onPress={() => setShowFromPicker(true)} style={styles.timeButton}>
               <Text style={styles.timeButtonText}>
                 From: {fromTime.toLocaleTimeString()}
@@ -199,7 +216,6 @@ function Schedule() {
               onCancel={() => setShowFromPicker(false)}
             />
 
-            {/* To Time Picker */}
             <TouchableOpacity onPress={() => setShowToPicker(true)} style={styles.timeButton}>
               <Text style={styles.timeButtonText}>
                 To: {toTime.toLocaleTimeString()}
@@ -222,10 +238,31 @@ function Schedule() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={isDeleteModalVisible}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete "{selectedEvent}"</Text>
+            <Text style={styles.modalText}>Are you sure you want to delete this event?</Text>
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity style={[styles.modalButton, styles.deleteButton]} onPress={deleteSchedule}>
+                <Text style={styles.modalButtonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setIsDeleteModalVisible(false)}>
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -276,6 +313,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     marginBottom: 10,
+    fontWeight: 'bold',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
     width: '100%',
@@ -295,6 +338,28 @@ const styles = StyleSheet.create({
   timeButtonText: {
     fontSize: 16,
     color: '#333',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(40, 68, 104, 1)',
+  },
+  cancelButton: {
+    backgroundColor: 'rgba(40, 68, 104, 0.4)',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

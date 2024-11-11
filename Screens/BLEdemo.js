@@ -18,7 +18,7 @@ import { getDatabase, ref, onValue, update, database } from 'firebase/database';
 import axios from 'axios';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native'; // Add if you are using navigation
+import { useNavigation } from '@react-navigation/native';
 
 
 const BLEdemo = () => {
@@ -30,6 +30,7 @@ const BLEdemo = () => {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [userDevices, setUserDevices] = useState({});
+  const navigation = useNavigation(); 
 
 
   const scanForDevices = async () => {
@@ -44,7 +45,6 @@ const BLEdemo = () => {
       if (foundDevices.length === 0) {
         Alert.alert('No Devices Found', 'No BLE devices found.');
       } else {
-        console.log('Found devices:', foundDevices);
         setDevices(foundDevices);
       }
     } catch (error) {
@@ -59,16 +59,16 @@ const BLEdemo = () => {
     if (!selectedDevice) return;
 
     try {
-      console.log("trying to connect");
+  
       await selectedDevice.connect("abcd1234");
-      console.log(ssid + " " + password);
+
 
       await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
 
       await selectedDevice.disconnect();
       const uid = user?.uid;
-      console.log("Sending UID to ESP32:", uid);
+   
       await sendUIDToESP32(uid);
     } catch (error) {
       console.error(error);
@@ -88,14 +88,16 @@ const BLEdemo = () => {
             body: JSON.stringify(data),
         });
 
-        // Log the raw response for debugging
-        const responseText = await response.text(); // Get the raw response text
-        console.log("Raw response from ESP32:", responseText); // Log raw response
+
+        const responseText = await response.text();
+   
 
         if (response.ok) {
-            const responseBody = JSON.parse(responseText); // Parse the JSON response
-            console.log("Response from ESP32:", responseBody);
+          setModalVisible(false)
+            const responseBody = JSON.parse(responseText);
+         
             const deviceId = responseBody.deviceId;
+            
             navigation.navigate('DeviceInfo', { deviceId: deviceId});
         } else {
             console.error("Failed to send UID. Status:", response.status);
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmButton: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: 'rgba(40, 68, 104, 1)',
     marginRight: 10,
   },
   cancelButton: {

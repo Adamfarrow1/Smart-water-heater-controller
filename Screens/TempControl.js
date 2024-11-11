@@ -18,15 +18,13 @@ function TempControl() {
       const deviceRef = ref(db, `controllers/${selectedDevice}`);
       const unsubscribe = onValue(deviceRef, (snapshot) => {
         const data = snapshot.val();
-        console.log(data.set_temperature);
         if (data && typeof data.set_temperature === 'number') {
           setCurrentTemp(data.set_temperature);
           setSetTemp(data.set_temperature);
         } else if (!data.set_temperature) {
-          // Handle invalid data type
           console.warn("Invalid temperature data from Firebase");
           changeTemp();
-          setCurrentTemp(120); // Set a default value if the data is not valid
+          setCurrentTemp(120);
           setSetTemp(120);
         }
       });
@@ -82,7 +80,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1b252d",
-    paddingBottom: 20, // Add padding to account for bottom nav
+    paddingBottom: 20,
   },
   content: {
     flexGrow: 1,

@@ -13,7 +13,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ximenavr.SWHC"
+      "bundleIdentifier": "com.ximenavr.SWHC",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["com.googleusercontent.apps.200839480102-hddu4k4btp65or4fkfmmfki0snteu69m.apps.googleusercontent.com"]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

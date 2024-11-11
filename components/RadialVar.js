@@ -27,7 +27,6 @@ const RadialVariant = ({ speed, setSpeed }) => {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.sliderContainer, { transform: [{ scale }], opacity }]}>
-        {/* Removed LinearGradient */}
         <RadialSlider 
           markerCircleSize={500}
           radius={150}

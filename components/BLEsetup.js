@@ -7,9 +7,6 @@ import {
   ESPSecurity,
 } from '@orbital-systems/react-native-esp-idf-provisioning';
 import ScanScreen from '../Screens/BLEsetup/ScanScreen';
-/* Uses stack navigation to guide the user through the setup.
-Instructions -> select ESP32 from list of BT devices ->
-Choose from list of wifi networks -> enter password for chosen wifi -> success/fail  */
 const BLEsetup = () => {
   const [devices, setDevices] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -25,7 +22,6 @@ const BLEsetup = () => {
       const transport = ESPTransport.ble;
       const security = ESPSecurity.secure2;
 
-      //Search for ESP devices with the given info
       const foundDevices = await ESPProvisionManager.searchESPDevices(prefix, transport, security);
 
       if (foundDevices.length === 0) 
@@ -34,11 +30,10 @@ const BLEsetup = () => {
       } 
       else 
       {
-        console.log('Found devices:', foundDevices);
-        setDevices(foundDevices); //set list of found devices
+        setDevices(foundDevices);
       }
     } catch (error) {
-      console.error(error);
+
       Alert.alert('Error', `Failed to scan for devices: ${error.message}`);
     } finally {
       setIsScanning(false);
@@ -49,15 +44,15 @@ const BLEsetup = () => {
     if (!selectedDevice) return;
 
     try {
-      console.log("trying to connect");
-      await selectedDevice.connect("abcd1234"); //pass null if no pin is needed
-      console.log(ssid + " " + password);
-      await selectedDevice.provision(ssid, password); //send wifi info for provisioning
+    
+      await selectedDevice.connect("abcd1234"); 
+      
+      await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
 
       await selectedDevice.disconnect();
     } catch (error) {
-      console.error(error);
+     
       Alert.alert('Error', `Failed to provision device: ${error.message}`);
     }
   };

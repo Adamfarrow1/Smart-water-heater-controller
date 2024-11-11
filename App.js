@@ -7,7 +7,6 @@ import Login from './Screens/Login.js';
 import ForgotPassword from './Screens/ForgotPassword.js';
 import Register from './Screens/Register.js';
 import Homescreen from './Screens/Homescreen.js';
-//import BLEsetup from './components/DeviceSetup.js';
 import LoggedinNavigator from './Screens/LoggedinNavigator.js'
 import { AuthenticationContext } from './context/userContext.js';
 import { DeviceProvider } from './context/DeviceContext';
@@ -22,9 +21,6 @@ const App = () => {
   return (
     
     <AuthenticationContext>
-      {/* <NavigationContainer>
-      <LoggedinNavigator></LoggedinNavigator>
-      </NavigationContainer> */}
     <DeviceProvider>
        <NavigationContainer>
        
@@ -44,7 +40,6 @@ const App = () => {
           headerBackTitleVisible: false, }} />
            <Stack.Screen name="Home" component={LoggedinNavigator} options={{ headerShown: false,gestureEnabled: false }} />
            <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{ headerShown: false }} />
-           {/*<Stack.Screen name="BLEsetup" component={BLEsetup} options={{title: 'Device Setup' }} />*/}
            <Stack.Screen name="BLEdemo" component={BLEdemo} options={{headerStyle: {
             backgroundColor: '#1b252d', 
           },
@@ -57,7 +52,12 @@ const App = () => {
           headerTintColor: '#ffffff', 
           headerTitle: 'Add Device', 
           headerBackTitleVisible: false, }} />
-           <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{title: 'Device info' }} />
+           <Stack.Screen name="DeviceInfo" component={DeviceInfo} options={{headerStyle: {
+            backgroundColor: '#1b252d', 
+          },
+          headerTintColor: '#ffffff', 
+          headerTitle: 'Device Info', 
+          headerBackTitleVisible: false, }} />
            <Stack.Screen name="SetupOptions" component={SetupOptions} options={{headerStyle: {
             backgroundColor: '#1b252d', 
           },
@@ -81,7 +81,3 @@ const App = () => {
 };
 
 export default App;
-
-
-/* <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />*/

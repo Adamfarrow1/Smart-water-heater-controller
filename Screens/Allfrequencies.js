@@ -34,7 +34,6 @@ function AllFrequencies() {
     setFrequencies(filteredFrequencies);
   };
   const fetchFrequencies = () => {
-    console.log("fetching frequencies")
     if (!selectedDevice) return;
     const db = getDatabase();
     const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
@@ -107,7 +106,7 @@ function AllFrequencies() {
           .catch(error => console.error("Error uploading frequency:", error));
       }, 3000);
   
-      return () => clearInterval(intervalId); // Cleanup to prevent memory leaks
+      return () => clearInterval(intervalId);
     }, [selectedDevice])
   );
   
