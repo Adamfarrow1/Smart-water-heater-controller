@@ -30,7 +30,10 @@ const BLEdemo = () => {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
   const [userDevices, setUserDevices] = useState({});
+  const [isWifiLoading, setIsWifiLoading] = useState(false); // Loading state for Wi-Fi credentials
+  const [isSettingUp, setIsSettingUp] = useState(false); // Loading state for setup completion
   const navigation = useNavigation(); 
+
 
 
   const scanForDevices = async () => {
@@ -59,12 +62,14 @@ const BLEdemo = () => {
     if (!selectedDevice) return;
 
     try {
-  
+      setIsWifiLoading(true); // Show Wi-Fi loading
       await selectedDevice.connect("abcd1234");
 
 
       await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
+      setIsWifiLoading(false); // Hide Wi-Fi loading
+      setIsSettingUp(true); // Show setup loading
 
       await selectedDevice.disconnect();
       const uid = user?.uid;
@@ -99,6 +104,7 @@ const BLEdemo = () => {
             const deviceId = responseBody.deviceId;
             
             navigation.navigate('DeviceInfo', { deviceId: deviceId});
+            setIsSettingUp(false); // Hide setup loading
         } else {
             console.error("Failed to send UID. Status:", response.status);
         }
@@ -159,47 +165,59 @@ const BLEdemo = () => {
         contentContainerStyle={styles.flatListContent}
       />
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Enter Wi-Fi Credentials</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="SSID"
-              placeholderTextColor="#bdc3c7"
-              value={ssid}
-              onChangeText={setSsid}
-            />
-            <TextInput
-              style={styles.textInput}
-              placeholder="Password"
-              placeholderTextColor="#bdc3c7"
-              value={password}
-              secureTextEntry
-              onChangeText={setPassword}
-            />
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={connectToDevice}
-              >
-                <Text style={styles.modalButtonText}>Connect</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+<Modal
+  animationType="fade"
+  transparent={true}
+  visible={modalVisible}
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+      {isWifiLoading ? (
+        <><Text style={styles.loadingText}>Sending WiFi credentials...</Text><ActivityIndicator size="large" color="#ffffff" /></>
+      ) : isSettingUp ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={styles.loadingText}>Almost done setting up...</Text>
         </View>
-      </Modal>
+      ) : (
+        <>
+          <Text style={styles.modalTitle}>Enter Wi-Fi Credentials</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="SSID"
+            placeholderTextColor="#bdc3c7"
+            value={ssid}
+            onChangeText={setSsid}
+          />
+          <TextInput
+            style={styles.textInput}
+            placeholder="Password"
+            placeholderTextColor="#bdc3c7"
+            value={password}
+            secureTextEntry
+            onChangeText={setPassword}
+          />
+          <View style={styles.modalButtonContainer}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.confirmButton]}
+              onPress={connectToDevice}
+            >
+              <Text style={styles.modalButtonText}>Connect</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </View>
+  </View>
+</Modal>
+
     </SafeAreaView>
   );
 }
@@ -327,6 +345,15 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#ffffff',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#ffffff',
     fontSize: 16,
   },
 })

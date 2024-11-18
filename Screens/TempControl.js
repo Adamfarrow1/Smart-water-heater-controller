@@ -22,7 +22,7 @@ function TempControl() {
           setCurrentTemp(data.set_temperature);
           setSetTemp(data.set_temperature);
         } else if (!data.set_temperature) {
-          console.warn("Invalid temperature data from Firebase");
+          //console.warn("Invalid temperature data from Firebase");
           changeTemp();
           setCurrentTemp(120);
           setSetTemp(120);

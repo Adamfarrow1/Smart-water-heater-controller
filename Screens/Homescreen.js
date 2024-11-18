@@ -70,24 +70,63 @@ const HomeScreen = () => {
     if (selectedDevice) {
       const db = getDatabase();
       const statusRef = ref(db, `controllers/${selectedDevice}/status`);
-      set(statusRef, !controllerStatus);
+  
+      if (!controllerStatus && !gridStatus) {
+        // If grid conditions require standby, show confirmation dialog
+        Alert.alert(
+          "Turn on Smart Water Heater?",
+          "Grid conditions are not optimal. Are you sure you want to turn on your Smart Water Heater?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+            },
+            {
+              text: "Confirm",
+              onPress: () => {
+                set(statusRef, true)
+                  .then(() => {
+                    console.log("Controller status set to ON despite grid condition.");
+                  })
+                  .catch((error) => {
+                    console.error("Failed to update controller status:", error);
+                  });
+              },
+            },
+          ]
+        );
+      } else {
+        // Normal toggle logic
+        set(statusRef, !controllerStatus)
+          .then(() => {
+            console.log(`Controller status toggled to ${!controllerStatus}`);
+          })
+          .catch((error) => {
+            console.error("Failed to toggle controller status:", error);
+          });
+      }
     }
   };
+  
 
   const getControllerStatusText = () => {
-    if (controllerStatus && gridStatus) {
-      return "Controller is ON";
-    } else if (!controllerStatus) {
-      return "Standby: Controller is OFF";
-    } else if (controllerStatus && !gridStatus) {
-      return "Standby:OFF due to Grid Condition";
+    if (gridStatus === false && !controllerStatus) {
+      return "Standby: OFF due to Grid Condition";
+    } else if (gridStatus === false && controllerStatus) {
+      return "Override: Smart Water Heater ON";
+    } else if (gridStatus === true && controllerStatus) {
+      return "Smart Water Heater is ON";
+    } else if (gridStatus === true && !controllerStatus) {
+      return "Smart Water Heater is OFF";
     }
     return "Unknown Status";
   };
+  
+  
 
   const getBatteryIcon = () => {
     if (batteryPercentage >= 75) return "battery-full";
-    if (batteryPercentage >= 50) return "battery-three-quarters";
+    if (batteryPercentage > 50) return "battery-three-quarters";
     if (batteryPercentage > 25) return "battery-half";
     if (batteryPercentage > 0) return "battery-quarter";
     return "battery-empty";
@@ -160,11 +199,8 @@ const HomeScreen = () => {
               console.log("Selected device object:", selected);
 
               if (selected) {
-                console.log("Setting name to:", selected.label);
                 setName(selected.label);
                 setDeviceInfo(selected);
-              } else {
-                console.warn("No matching device found!");
               }
             }}
             placeholder={'Select a device'}
@@ -193,19 +229,25 @@ const HomeScreen = () => {
           <View style={styles.statusContainer}>
             <View style={styles.statusCard}>
               <View style={styles.statusIndicator}>
-                <View style={[styles.statusDot, { backgroundColor: controllerStatus ? '#4CAF50' : '#FF5252' }]} />
+                <View
+                  style={[
+                    styles.statusDot,
+                    { backgroundColor: controllerStatus === false ? '#FF5252' : '#4CAF50' }, 
+                  ]}
+                />
                 <Text style={styles.statusText}>{getControllerStatusText()}</Text>
               </View>
               <Switch
-                trackColor={{false: '#767577', true: '#81b0ff'}}
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
                 thumbColor={controllerStatus ? '#f4f3f4' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleController}
-                value={controllerStatus}
+                value={controllerStatus} 
               />
             </View>
 
-            {controllerStatus && batteryPercentage !== null && (
+
+            {batteryPercentage !== null && (
               <View style={styles.batteryCard}>
                 <FontAwesome name={getBatteryIcon()} size={24} color="#ffffff" />
                 <Text style={styles.batteryText}>Battery: {batteryPercentage}%</Text>
