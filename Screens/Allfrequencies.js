@@ -1,51 +1,62 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, TextInput, SafeAreaView, ActivityIndicator } from 'react-native';
-import { getDatabase, ref, get, set, query, limitToLast, orderByKey, startAt, endAt } from "firebase/database";
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { getDatabase, ref, get, set, query, orderByKey, startAt, endAt } from "firebase/database";
 import { useDevice } from '../context/DeviceContext';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
-const ITEMS_PER_FETCH = 50;
-
 function AllFrequencies() {
   const [frequencies, setFrequencies] = useState([]);
-  const [allFrequencies, setAllFrequencies] = useState([]);
+  const [displayedFrequencies, setDisplayedFrequencies] = useState([]);
   const [sortOrder, setSortOrder] = useState('desc');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date().setHours(0, 0, 0, 0));
   const [endTime, setEndTime] = useState(new Date().setHours(23, 59, 59, 999));
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [isFromDatePickerVisible, setFromDatePickerVisibility] = useState(false);
+  const [isToDatePickerVisible, setToDatePickerVisibility] = useState(false);
   const [isStartTimePickerVisible, setStartTimePickerVisibility] = useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showingAnomalous, setShowingAnomalous] = useState(false);
   const { selectedDevice } = useDevice();
-  const flatListRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
-  const showDatePicker = () => setDatePickerVisibility(true);
-  const hideDatePicker = () => setDatePickerVisibility(false);
+  const ITEMS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const showFromDatePicker = () => setFromDatePickerVisibility(true);
+  const hideFromDatePicker = () => setFromDatePickerVisibility(false);
+  const showToDatePicker = () => setToDatePickerVisibility(true);
+  const hideToDatePicker = () => setToDatePickerVisibility(false);
   const showStartTimePicker = () => setStartTimePickerVisibility(true);
   const hideStartTimePicker = () => setStartTimePickerVisibility(false);
   const showEndTimePicker = () => setEndTimePickerVisibility(true);
   const hideEndTimePicker = () => setEndTimePickerVisibility(false);
-  
-  const handleConfirmDate = (date) => {
-    hideDatePicker();
-    setSelectedDate(date);
-    fetchFrequencies(date, new Date(startTime), new Date(endTime), showingAnomalous);
+
+  const handleConfirmFromDate = (date) => {
+    hideFromDatePicker();
+    setFromDate(date);
+    fetchFrequencies(date, toDate, new Date(startTime), new Date(endTime), showingAnomalous);
+  };
+
+  const handleConfirmToDate = (date) => {
+    hideToDatePicker();
+    setToDate(date);
+    fetchFrequencies(fromDate, date, new Date(startTime), new Date(endTime), showingAnomalous);
   };
 
   const handleConfirmStartTime = (time) => {
     hideStartTimePicker();
     setStartTime(time.getTime());
-    fetchFrequencies(selectedDate, time, new Date(endTime), showingAnomalous);
+    fetchFrequencies(fromDate, toDate, time, new Date(endTime), showingAnomalous);
   };
 
   const handleConfirmEndTime = (time) => {
     hideEndTimePicker();
     setEndTime(time.getTime());
-    fetchFrequencies(selectedDate, new Date(startTime), time, showingAnomalous);
+    fetchFrequencies(fromDate, toDate, new Date(startTime), time, showingAnomalous);
   };
 
   const removeDuplicates = (data) => {
@@ -68,21 +79,20 @@ function AllFrequencies() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
   };
 
-  const fetchFrequencies = useCallback((date = selectedDate, start = new Date(startTime), end = new Date(endTime), anomalous = showingAnomalous) => {
+  const fetchFrequencies = useCallback((from = fromDate, to = toDate, start = new Date(startTime), end = new Date(endTime), anomalous = showingAnomalous) => {
     if (!selectedDevice) return;
     setIsLoading(true);
     const db = getDatabase();
     const deviceRef = ref(db, `controllers/${selectedDevice}/frequency`);
     
-    const startAtDate = formatDateTimeForQuery(date, start);
-    const endAtDate = formatDateTimeForQuery(date, end);
+    const startAtDate = formatDateTimeForQuery(from, start);
+    const endAtDate = formatDateTimeForQuery(to, end);
 
     const frequencyQuery = query(
       deviceRef,
       orderByKey(),
       startAt(startAtDate),
-      endAt(endAtDate),
-      limitToLast(ITEMS_PER_FETCH)
+      endAt(endAtDate)
     );
 
     get(frequencyQuery)
@@ -100,11 +110,12 @@ function AllFrequencies() {
           const uniqueFrequencies = removeDuplicates(frequencyArray);
           const sortedFrequencies = sortFrequencies(uniqueFrequencies, sortOrder);
 
-          setAllFrequencies(sortedFrequencies);
           setFrequencies(sortedFrequencies);
+          setCurrentPage(1);
+          updateDisplayedFrequencies(sortedFrequencies, 1);
         } else {
-          setAllFrequencies([]);
           setFrequencies([]);
+          setDisplayedFrequencies([]);
         }
         setIsLoading(false);
       })
@@ -112,11 +123,16 @@ function AllFrequencies() {
         console.error("Error fetching data from Firebase:", error);
         setIsLoading(false);
       });
-  }, [selectedDevice, sortOrder, selectedDate, startTime, endTime, showingAnomalous]);
+  }, [selectedDevice, sortOrder, fromDate, toDate, startTime, endTime, showingAnomalous]);
+
+  const updateDisplayedFrequencies = (allFrequencies, page) => {
+    const endIndex = page * ITEMS_PER_PAGE;
+    setDisplayedFrequencies(allFrequencies.slice(0, endIndex));
+  };
 
   useEffect(() => {
     fetchFrequencies();
-  }, [selectedDevice, sortOrder, selectedDate, startTime, endTime, showingAnomalous]);
+  }, [selectedDevice, sortOrder, fromDate, toDate, startTime, endTime, showingAnomalous]);
 
   const sortFrequencies = (data, order) => {
     return data.sort((a, b) => {
@@ -129,13 +145,23 @@ function AllFrequencies() {
   const handleSortToggle = () => {
     const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
     setSortOrder(newSortOrder);
-    setFrequencies(sortFrequencies([...frequencies], newSortOrder));
+    const sortedFrequencies = sortFrequencies([...frequencies], newSortOrder);
+    setFrequencies(sortedFrequencies);
+    setCurrentPage(1);
+    updateDisplayedFrequencies(sortedFrequencies, 1);
+  };
+
+  const scrollToTop = () => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+    }
   };
 
   const filterAnomalous = () => {
     const newShowingAnomalous = !showingAnomalous;
     setShowingAnomalous(newShowingAnomalous);
-    fetchFrequencies(selectedDate, new Date(startTime), new Date(endTime), newShowingAnomalous);
+    fetchFrequencies(fromDate, toDate, new Date(startTime), new Date(endTime), newShowingAnomalous);
+    scrollToTop();
   };
 
   useFocusEffect(
@@ -166,20 +192,19 @@ function AllFrequencies() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.frequencyItem}>
+  const renderFrequencyItem = (item) => (
+    <View key={item.timestamp} style={styles.frequencyItem}>
       <Text style={styles.timestamp}>{item.timestamp}</Text>
       <Text style={styles.value}>{item.value} Hz</Text>
     </View>
   );
 
-  const renderFooter = () => {
-    if (!isLoading) return null;
-    return (
-      <View style={styles.loadingFooter}>
-        <ActivityIndicator size="large" color="#ffffff" />
-      </View>
-    );
+  const loadMore = () => {
+    if (displayedFrequencies.length < frequencies.length) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      updateDisplayedFrequencies(frequencies, nextPage);
+    }
   };
 
   return (
@@ -196,10 +221,17 @@ function AllFrequencies() {
           <Feather name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'} size={20} color="#ffffff" />
           <Text style={styles.sortButtonText}>Sort by Time</Text>
         </TouchableOpacity>
+      </View>
 
-        <TouchableOpacity onPress={showDatePicker} style={styles.dateButton}>
+      <View style={styles.dateRangeContainer}>
+        <TouchableOpacity onPress={showFromDatePicker} style={styles.dateButton}>
           <Feather name="calendar" size={20} color="#ffffff" />
-          <Text style={styles.dateButtonText}>{selectedDate.toLocaleDateString()}</Text>
+          <Text style={styles.dateButtonText}>{fromDate.toLocaleDateString()}</Text>
+        </TouchableOpacity>
+        <Text style={styles.dateRangeSeparator}>to</Text>
+        <TouchableOpacity onPress={showToDatePicker} style={styles.dateButton}>
+          <Feather name="calendar" size={20} color="#ffffff" />
+          <Text style={styles.dateButtonText}>{toDate.toLocaleDateString()}</Text>
         </TouchableOpacity>
       </View>
 
@@ -216,10 +248,18 @@ function AllFrequencies() {
       </View>
 
       <DateTimePickerModal
-        isVisible={isDatePickerVisible}
+        isVisible={isFromDatePickerVisible}
         mode="date"
-        onConfirm={handleConfirmDate}
-        onCancel={hideDatePicker}
+        onConfirm={handleConfirmFromDate}
+        onCancel={hideFromDatePicker}
+        themeVariant="light"
+      />
+
+      <DateTimePickerModal
+        isVisible={isToDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmToDate}
+        onCancel={hideToDatePicker}
         themeVariant="light"
       />
 
@@ -248,15 +288,30 @@ function AllFrequencies() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={flatListRef}
-        data={frequencies}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => `${item.timestamp}-${index}`}
-        contentContainerStyle={styles.scrollContainer}
-        ListEmptyComponent={<Text style={styles.noData}>No frequency data available</Text>}
-        ListFooterComponent={renderFooter}
-      />
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        {displayedFrequencies.length === 0 ? (
+          <Text style={styles.noData}>No frequency data available</Text>
+        ) : (
+          displayedFrequencies.map(renderFrequencyItem)
+        )}
+        {isLoading && (
+          <View style={styles.loadingFooter}>
+            <ActivityIndicator size="large" color="#ffffff" />
+          </View>
+        )}
+        {!isLoading && displayedFrequencies.length < frequencies.length && (
+          <TouchableOpacity
+            style={styles.loadMoreButton}
+            onPress={loadMore}
+          >
+            <Text style={styles.loadMoreButtonText}>Load More</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -280,7 +335,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   refreshButton: {
-    padding: 10,
+    padding:
+10,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -298,16 +354,28 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     marginLeft: 10,
   },
+  dateRangeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(40, 68, 104, 0.4)',
     padding: 10,
     borderRadius: 8,
+    flex: 1,
   },
   dateButtonText: {
     color: 'white',
     marginLeft: 10,
+  },
+  dateRangeSeparator: {
+    color: 'white',
+    marginHorizontal: 10,
   },
   timeRangeContainer: {
     flexDirection: 'row',
@@ -344,7 +412,10 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     marginLeft: 10,
   },
-  scrollContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -375,6 +446,17 @@ const styles = StyleSheet.create({
   loadingFooter: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  loadMoreButton: {
+    backgroundColor: 'rgba(40, 68, 104, 0.6)',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  loadMoreButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
   },
 });
 
