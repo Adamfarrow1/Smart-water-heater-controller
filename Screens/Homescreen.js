@@ -12,10 +12,11 @@ import {
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
-import { getDatabase, ref, onValue, set } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 import { getStorage, ref as storageRef, getDownloadURL } from "firebase/storage";
 import { useDevice } from '../context/DeviceContext';
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import { Alert } from "react-native";
 
 const HomeScreen = () => {
   const { user, loading } = useUser();
@@ -109,6 +110,44 @@ const HomeScreen = () => {
     }
   };
 
+
+  const deleteDevice = () => {
+    if (!selectedDevice) {
+      Alert.alert("Error", "Please select a device to delete.");
+      return;
+    }
+
+    Alert.alert(
+      "Delete Device",
+      "Are you sure you want to delete this device?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            const db = getDatabase();
+            const deviceRef = ref(db, `users/${user.uid}/devices/${selectedDevice}`);
+            remove(deviceRef)
+              .then(() => {
+                setSelectedDevice(null);
+                setDeviceInfo(null);
+                setName(null);
+                Alert.alert("Success", "Device deleted successfully.");
+              })
+              .catch((error) => {
+                console.error("Error deleting device:", error);
+                Alert.alert("Error", "Failed to delete device. Please try again.");
+              });
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
   const getControllerStatusText = () => {
     if (controllerStatus === null || gridStatus === null) {
       return "Unknown Status";
@@ -131,22 +170,22 @@ const HomeScreen = () => {
 
   const getStatusColor = () => {
     if (controllerStatus === null || gridStatus === null) {
-      return '#767577'; 
+      return '#767577'; // Gray for unknown status
     }
     
     if (!controllerStatus) {
-      return '#FF5252'; 
+      return '#FF5252'; // Red for off
     }
     
     if (controllerStatus && !gridStatus) {
-      return '#FFA726';
+      return '#FFA726'; // Orange for grid condition
     }
     
     if (controllerStatus && gridStatus) {
-      return '#4CAF50'; 
+      return '#4CAF50'; // Green for on
     }
     
-    return '#767577'; 
+    return '#767577'; // Gray for unknown status
   };
 
   const getBatteryIcon = () => {
@@ -209,11 +248,18 @@ const HomeScreen = () => {
             textStyle={styles.dropdownText}
             placeholderStyle={styles.dropdownPlaceholder}
           />
-
-          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
-            <Ionicons name="add-circle-outline" size={24} color="#ffffff" />
-            <Text style={styles.addButtonText}>Add Device</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
+              <Ionicons name="add-circle-outline" size={24} color="#ffffff" />
+              <Text style={styles.buttonText}>Add Device</Text>
+            </TouchableOpacity>
+            {selectedDevice && (
+              <TouchableOpacity style={styles.deleteButton} onPress={() => deleteDevice(selectedDevice)}>
+                <Ionicons name="trash-outline" size={24} color="#ffffff" />
+                <Text style={styles.buttonText}>Delete Device</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         
         {controllerStatus !== null && (
@@ -319,12 +365,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     padding: 15,
+    flex: 1,
+    marginRight: 10,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+    borderRadius: 10,
+    padding: 15,
+    flex: 1,
+    marginLeft: 10,
+  },
+  buttonText: {
+    color: "#ffffff",
+    marginLeft: 10,
+    fontSize: 16,
+    fontWeight: "600",
   },
   addButtonText: {
     color: "#ffffff",
     marginLeft: 10,
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   statusContainer: {
     marginTop: 20,
@@ -403,3 +471,4 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
+
