@@ -3,9 +3,7 @@ import {
   View,
   Text,
   Alert,
-  Button,
   Modal,
-  TextInput,
   StyleSheet,
   FlatList,
   SafeAreaView,
@@ -32,33 +30,39 @@ const AddDevice = () => {
     const [selectedDevice, setSelectedDevice] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const navigation = useNavigation(); 
+    const [isSettingUp, setIsSettingUp] = useState(false); // Loading state for setup completion
 
     const scanForDevices = async () => {
-        try {
-          setIsScanning(true);
-          const prefix = '';
-          const transport = ESPTransport.ble;
-          const security = ESPSecurity.secure2;
-    
-          const foundDevices = await ESPProvisionManager.searchESPDevices(prefix, transport, security);
-    
-          if (foundDevices.length === 0) {
-            Alert.alert('No Devices Found', 'No BLE devices found.');
-          } else {
-            setDevices(foundDevices);
-          }
-        } catch (error) {
-          console.error(error);
-          Alert.alert('Error', `Failed to scan for devices: ${error.message}`);
-        } finally {
-          setIsScanning(false);
+      try {
+        setIsScanning(true);
+        
+        // Example: Add the mDNS device to the list
+        const foundDevices = [
+          {
+            id: '1',
+            name: 'ESP32 Device',
+            address: 'esp32.local',
+          },
+        ];
+  
+        if (foundDevices.length === 0) {
+          Alert.alert('No Devices Found', 'No mDNS devices found.');
+        } else {
+          setDevices(foundDevices);
         }
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Error', `Failed to scan for devices: ${error.message}`);
+      } finally {
+        setIsScanning(false);
+      }
       };
 
     const connectToDevice = async () => {
-    if (!selectedDevice) return;
+   // if (!selectedDevice) return;
 
-      await selectedDevice.disconnect();
+     // await selectedDevice.disconnect();
+     setIsSettingUp(true); // Show setup loading
       const uid = user?.uid;
       await sendUIDToESP32(uid);
     };
@@ -87,6 +91,8 @@ const AddDevice = () => {
                 const responseBody = JSON.parse(responseText); 
                 const deviceId = responseBody.deviceId;
                 navigation.navigate('DeviceInfo', { deviceId: deviceId});
+                setIsSettingUp(false);
+                setModalVisible(false);
             } else {
                 console.error("Failed to send UID. Status:", response.status);
             }
@@ -155,6 +161,13 @@ const AddDevice = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
+          {isSettingUp ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ffffff" />
+                <Text style={styles.loadingText}>Almost done setting up...</Text>
+              </View>
+            ) : (
+              <>
             <Text style={styles.modalTitle}>Connect to Device</Text>
             <Text style={styles.modalText}>
               Do you want to connect to {selectedDevice?.name}?
@@ -173,6 +186,8 @@ const AddDevice = () => {
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
+            </>
+            )}
           </View>
         </View>
       </Modal>
@@ -300,6 +315,14 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    fontSize: 16,
+    marginTop: 10,
   },
 });
 

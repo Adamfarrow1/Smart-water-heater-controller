@@ -10,13 +10,13 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		307C5BDD75064A0C86BCACAE /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60885F1F64D6461CB147E658 /* noop-file.swift */; };
+		1485FA017C684B17AA5EB0AD /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E7F2D7D79A2348BCB3D95EF7 /* GoogleService-Info.plist */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		6866BB5316814399BD336213 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CF098B68A762423D8802A16B /* GoogleService-Info.plist */; };
+		6240CD9E7481B0274B972D10 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F7E2CA962670C4C4C2D28365 /* PrivacyInfo.xcprivacy */; };
 		96905EF65AED1B983A6B3ABC /* libPods-SWHC.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-SWHC.a */; };
-		A4E6F2110ECF4163EAEC6DFD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AAF4856AE6D9E18CF9169DD3 /* PrivacyInfo.xcprivacy */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		D3C260E237364303A0AAAEA2 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46284328AE674CD4B3C8B57E /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,16 +26,16 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SWHC/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SWHC/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = SWHC/main.m; sourceTree = "<group>"; };
-		20A2EDE2478844328AB583D5 /* SWHC-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "SWHC-Bridging-Header.h"; path = "SWHC/SWHC-Bridging-Header.h"; sourceTree = "<group>"; };
+		46284328AE674CD4B3C8B57E /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "SWHC/noop-file.swift"; sourceTree = "<group>"; };
 		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-SWHC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-SWHC.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		60885F1F64D6461CB147E658 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "SWHC/noop-file.swift"; sourceTree = "<group>"; };
 		6C2E3173556A471DD304B334 /* Pods-SWHC.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SWHC.debug.xcconfig"; path = "Target Support Files/Pods-SWHC/Pods-SWHC.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-SWHC.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SWHC.release.xcconfig"; path = "Target Support Files/Pods-SWHC/Pods-SWHC.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = SWHC/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AAF4856AE6D9E18CF9169DD3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = SWHC/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CF098B68A762423D8802A16B /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "SWHC/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		E7F2D7D79A2348BCB3D95EF7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "SWHC/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		E83F0009F461430591291707 /* SWHC-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "SWHC-Bridging-Header.h"; path = "SWHC/SWHC-Bridging-Header.h"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F7E2CA962670C4C4C2D28365 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = SWHC/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-SWHC/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -61,10 +61,10 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				60885F1F64D6461CB147E658 /* noop-file.swift */,
-				20A2EDE2478844328AB583D5 /* SWHC-Bridging-Header.h */,
-				AAF4856AE6D9E18CF9169DD3 /* PrivacyInfo.xcprivacy */,
-				CF098B68A762423D8802A16B /* GoogleService-Info.plist */,
+				E7F2D7D79A2348BCB3D95EF7 /* GoogleService-Info.plist */,
+				46284328AE674CD4B3C8B57E /* noop-file.swift */,
+				E83F0009F461430591291707 /* SWHC-Bridging-Header.h */,
+				F7E2CA962670C4C4C2D28365 /* PrivacyInfo.xcprivacy */,
 			);
 			name = SWHC;
 			sourceTree = "<group>";
@@ -150,13 +150,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "SWHC" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				F5E6490ED68BE8CC5F900518 /* [Expo] Configure project */,
+				843BC4C16956D1C247D444BC /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				0E3198E1DEEF09033149F13F /* [CP] Embed Pods Frameworks */,
+				57EA1FA4E2A1423875AA992F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -206,8 +206,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				A4E6F2110ECF4163EAEC6DFD /* PrivacyInfo.xcprivacy in Resources */,
-				6866BB5316814399BD336213 /* GoogleService-Info.plist in Resources */,
+				1485FA017C684B17AA5EB0AD /* GoogleService-Info.plist in Resources */,
+				6240CD9E7481B0274B972D10 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,7 +251,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		0E3198E1DEEF09033149F13F /* [CP] Embed Pods Frameworks */ = {
+		57EA1FA4E2A1423875AA992F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -345,7 +345,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SWHC/Pods-SWHC-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F5E6490ED68BE8CC5F900518 /* [Expo] Configure project */ = {
+		843BC4C16956D1C247D444BC /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -374,7 +374,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				307C5BDD75064A0C86BCACAE /* noop-file.swift in Sources */,
+				D3C260E237364303A0AAAEA2 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,7 +409,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ximenavr.SWHC;
-				PRODUCT_NAME = "SWHC";
+				PRODUCT_NAME = SWHC;
 				SWIFT_OBJC_BRIDGING_HEADER = "SWHC/SWHC-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -441,7 +441,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.ximenavr.SWHC;
-				PRODUCT_NAME = "SWHC";
+				PRODUCT_NAME = SWHC;
 				SWIFT_OBJC_BRIDGING_HEADER = "SWHC/SWHC-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -508,10 +508,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -569,10 +566,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
