@@ -8,12 +8,12 @@ import {
   Switch,
   ScrollView,
   SafeAreaView,
-  Alert,
 } from "react-native";
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useUser } from "../context/userContext";
 import { useNavigation } from '@react-navigation/native';
-import { getDatabase, ref, onValue, set, remove } from "firebase/database";
+import { getDatabase, ref, onValue, set } from "firebase/database";
+import { getStorage, ref as storageRef, getDownloadURL } from "firebase/storage";
 import { useDevice } from '../context/DeviceContext';
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
@@ -25,6 +25,7 @@ const HomeScreen = () => {
   const [controllerStatus, setControllerStatus] = useState(null);
   const [gridStatus, setGridStatus] = useState(null);
   const [devices, setDevices] = useState([]);
+  const [gridAttachmentStatus, setGridAttachmentStatus] = useState(null);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -53,15 +54,44 @@ const HomeScreen = () => {
       const statusRef = ref(db, `controllers/${selectedDevice}/status`);
       const gridStatusRef = ref(db, `controllers/${selectedDevice}/gridStatus`);
       const batteryRef = ref(db, `controllers/${selectedDevice}/battery`);
+      const gridAttachmentRef = ref(db, `controllers/${selectedDevice}/gridAttachment`);
       
-      const unsubscribeStatus = onValue(statusRef, (snapshot) => setControllerStatus(snapshot.val()));
-      const unsubscribeGridStatus = onValue(gridStatusRef, (snapshot) => setGridStatus(snapshot.val()));
+      const unsubscribeStatus = onValue(statusRef, (snapshot) => {
+        const status = snapshot.val();
+        setControllerStatus(status);
+      });
+
+      const unsubscribeGridStatus = onValue(gridStatusRef, (snapshot) => {
+        const status = snapshot.val();
+        setGridStatus(status);
+      });
+
       const unsubscribeBattery = onValue(batteryRef, (snapshot) => setBatteryPercentage(snapshot.val()));
+
+      const unsubscribeGridAttachment = onValue(gridAttachmentRef, async (snapshot) => {
+        const attachmentUrl = snapshot.val();
+        if (attachmentUrl) {
+          try {
+            const storage = getStorage();
+            const attachmentRef = storageRef(storage, attachmentUrl);
+            const downloadURL = await getDownloadURL(attachmentRef);
+            const response = await fetch(downloadURL);
+            const attachmentContent = await response.text();
+            setGridAttachmentStatus(attachmentContent);
+          } catch (error) {
+            console.error("Error fetching grid attachment:", error);
+            setGridAttachmentStatus(null);
+          }
+        } else {
+          setGridAttachmentStatus(null);
+        }
+      });
 
       return () => {
         unsubscribeStatus();
         unsubscribeGridStatus();
         unsubscribeBattery();
+        unsubscribeGridAttachment();
       };
     }
   }, [selectedDevice]);
@@ -70,109 +100,74 @@ const HomeScreen = () => {
     if (selectedDevice) {
       const db = getDatabase();
       const statusRef = ref(db, `controllers/${selectedDevice}/status`);
-  
-      if (!controllerStatus && !gridStatus) {
-        // If grid conditions require standby, show confirmation dialog
-        Alert.alert(
-          "Turn on Smart Water Heater?",
-          "Grid conditions are not optimal. Are you sure you want to turn on your Smart Water Heater?",
-          [
-            {
-              text: "Cancel",
-              style: "cancel",
-            },
-            {
-              text: "Confirm",
-              onPress: () => {
-                set(statusRef, true)
-                  .then(() => {
-                    console.log("Controller status set to ON despite grid condition.");
-                  })
-                  .catch((error) => {
-                    console.error("Failed to update controller status:", error);
-                  });
-              },
-            },
-          ]
-        );
-      } else {
-        // Normal toggle logic
-        set(statusRef, !controllerStatus)
-          .then(() => {
-            console.log(`Controller status toggled to ${!controllerStatus}`);
-          })
-          .catch((error) => {
-            console.error("Failed to toggle controller status:", error);
-          });
-      }
+      
+      const newStatus = !controllerStatus;
+      
+      set(statusRef, newStatus).catch(error => {
+        console.error("Error toggling controller:", error);
+      });
     }
   };
-  
 
   const getControllerStatusText = () => {
-    if (gridStatus === false && !controllerStatus) {
-      return "Standby: OFF due to Grid Condition";
-    } else if (gridStatus === false && controllerStatus) {
-      return "Override: Smart Water Heater ON";
-    } else if (gridStatus === true && controllerStatus) {
-      return "Smart Water Heater is ON";
-    } else if (gridStatus === true && !controllerStatus) {
-      return "Smart Water Heater is OFF";
+    if (controllerStatus === null || gridStatus === null) {
+      return "Unknown Status";
     }
+    
+    if (!controllerStatus) {
+      return "Standby: Controller is OFF";
+    }
+    
+    if (controllerStatus && !gridStatus) {
+      return "Standby: OFF due to Grid Condition";
+    }
+    
+    if (controllerStatus && gridStatus) {
+      return "Controller is ON";
+    }
+    
     return "Unknown Status";
   };
-  
-  
+
+  const getStatusColor = () => {
+    if (controllerStatus === null || gridStatus === null) {
+      return '#767577'; 
+    }
+    
+    if (!controllerStatus) {
+      return '#FF5252'; 
+    }
+    
+    if (controllerStatus && !gridStatus) {
+      return '#FFA726';
+    }
+    
+    if (controllerStatus && gridStatus) {
+      return '#4CAF50'; 
+    }
+    
+    return '#767577'; 
+  };
 
   const getBatteryIcon = () => {
     if (batteryPercentage >= 75) return "battery-full";
-    if (batteryPercentage > 50) return "battery-three-quarters";
+    if (batteryPercentage >= 50) return "battery-three-quarters";
     if (batteryPercentage > 25) return "battery-half";
     if (batteryPercentage > 0) return "battery-quarter";
     return "battery-empty";
   };
 
-  const deleteDevice = () => {
-    if (!selectedDevice) {
-      Alert.alert("Error", "Please select a device to delete.");
-      return;
+  const getGridStatusMessage = () => {
+    if (gridStatus === false) {
+      return "The water heater is temporarily turned off to solve frequency issues.";
     }
-
-    Alert.alert(
-      "Delete Device",
-      "Are you sure you want to delete this device?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          onPress: () => {
-            const db = getDatabase();
-            const deviceRef = ref(db, `users/${user.uid}/devices/${selectedDevice}`);
-            remove(deviceRef)
-              .then(() => {
-                setSelectedDevice(null);
-                setDeviceInfo(null);
-                setName(null);
-                Alert.alert("Success", "Device deleted successfully.");
-              })
-              .catch((error) => {
-                console.error("Error deleting device:", error);
-                Alert.alert("Error", "Failed to delete device. Please try again.");
-              });
-          },
-          style: "destructive"
-        }
-      ]
-    );
+    return null;
   };
 
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator color="#fff" size="small" />
       </View>
     );
   }
@@ -199,8 +194,11 @@ const HomeScreen = () => {
               console.log("Selected device object:", selected);
 
               if (selected) {
+                console.log("Setting name to:", selected.label);
                 setName(selected.label);
                 setDeviceInfo(selected);
+              } else {
+                console.warn("No matching device found!");
               }
             }}
             placeholder={'Select a device'}
@@ -212,45 +210,46 @@ const HomeScreen = () => {
             placeholderStyle={styles.dropdownPlaceholder}
           />
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
-              <Ionicons name="add-circle-outline" size={24} color="#ffffff" />
-              <Text style={styles.buttonText}>Add Device</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.deleteButton} onPress={deleteDevice}>
-              <Ionicons name="trash-outline" size={24} color="#ffffff" />
-              <Text style={styles.buttonText}>Delete Device</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
+            <Ionicons name="add-circle-outline" size={24} color="#ffffff" />
+            <Text style={styles.addButtonText}>Add Device</Text>
+          </TouchableOpacity>
         </View>
         
         {controllerStatus !== null && (
           <View style={styles.statusContainer}>
+            {getGridStatusMessage() && (
+              <View style={styles.gridStatusMessageCard}>
+                <Ionicons name="warning-outline" size={24} color="#FFD700" style={styles.warningIcon} />
+                <Text style={styles.gridStatusMessageText}>{getGridStatusMessage()}</Text>
+              </View>
+            )}
+
             <View style={styles.statusCard}>
               <View style={styles.statusIndicator}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    { backgroundColor: controllerStatus === false ? '#FF5252' : '#4CAF50' }, 
-                  ]}
-                />
+                <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
                 <Text style={styles.statusText}>{getControllerStatusText()}</Text>
               </View>
               <Switch
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                trackColor={{false: '#767577', true: '#81b0ff'}}
                 thumbColor={controllerStatus ? '#f4f3f4' : '#f4f3f4'}
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleController}
-                value={controllerStatus} 
+                value={controllerStatus}
               />
             </View>
-
 
             {batteryPercentage !== null && (
               <View style={styles.batteryCard}>
                 <FontAwesome name={getBatteryIcon()} size={24} color="#ffffff" />
                 <Text style={styles.batteryText}>Battery: {batteryPercentage}%</Text>
+              </View>
+            )}
+
+            {gridAttachmentStatus && (
+              <View style={styles.gridAttachmentCard}>
+                <Text style={styles.gridAttachmentTitle}>Grid Attachment Status:</Text>
+                <Text style={styles.gridAttachmentContent}>{gridAttachmentStatus}</Text>
               </View>
             )}
           </View>
@@ -314,30 +313,14 @@ const styles = StyleSheet.create({
   dropdownPlaceholder: {
     color: 'rgba(255, 255, 255, 0.5)',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 10,
     padding: 15,
-    flex: 1,
-    marginRight: 10,
   },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 0, 0, 0.2)',
-    borderRadius: 10,
-    padding: 15,
-    flex: 1,
-    marginLeft: 10,
-  },
-  buttonText: {
+  addButtonText: {
     color: "#ffffff",
     marginLeft: 10,
     fontSize: 16,
@@ -382,6 +365,40 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     marginLeft: 15,
+  },
+  gridAttachmentCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    marginTop: 20,
+  },
+  gridAttachmentTitle: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  gridAttachmentContent: {
+    color: "#ffffff",
+    fontSize: 14,
+  },
+  gridStatusMessageCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 193, 7, 0.15)',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 20,
+  },
+  gridStatusMessageText: {
+    flex: 1,
+    color: "#FFD700",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 10,
+  },
+  warningIcon: {
+    marginRight: 10,
   },
 });
 
