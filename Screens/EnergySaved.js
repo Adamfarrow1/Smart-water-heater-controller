@@ -34,39 +34,43 @@ function EnergySaved() {
     }, [selectedDevice])
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!selectedDevice) return;
-      const db = getDatabase();
-      const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
+
+
+  //-------------  use this to simulate data ---------------
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (!selectedDevice) return;
+  //     const db = getDatabase();
+  //     const deviceref = ref(db, `controllers/${selectedDevice}/frequency`);
       
-      const intervalId = setInterval(() => {
-        const newFrequency = generateFrequency();
-        const dateTimeKey = formatDateKey();
+  //     const intervalId = setInterval(() => {
+  //       const newFrequency = generateFrequency();
+  //       const dateTimeKey = formatDateKey();
         
-        set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
-          .then(() => {
-            console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
-          })
-          .catch((error) => {
-            console.error("Error uploading frequency:", error);
-          });
-      }, 3000);
+  //       set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
+  //         .then(() => {
+  //           console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`);
+  //         })
+  //         .catch((error) => {
+  //           console.error("Error uploading frequency:", error);
+  //         });
+  //     }, 3000);
 
-      return () => clearInterval(intervalId);
-    }, [selectedDevice])
-  );
+  //     return () => clearInterval(intervalId);
+  //   }, [selectedDevice])
+  // );
 
-  const generateFrequency = () => {
-    const random = Math.random();
-    if (random < 0.8) return 60;
-    return Math.random() < 0.5 ? 59 : 61;
-  };
+  // const generateFrequency = () => {
+  //   const random = Math.random();
+  //   if (random < 0.8) return 60;
+  //   return Math.random() < 0.5 ? 59 : 61;
+  // };
 
-  const formatDateKey = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  };
+  // const formatDateKey = () => {
+  //   const now = new Date();
+  //   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  // };
 
   const TipCard = ({ icon, text, onPress }) => (
     <TouchableOpacity onPress={onPress} style={styles.tipRow}>
@@ -148,8 +152,7 @@ const styles = StyleSheet.create({
   tipsContainer: { gap: 16 },
   tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 8, paddingHorizontal: 12, marginBottom: 10 },
   tipIcon: { marginRight: 10 },
-  tipText: {fontSize: 16,color: '#e2e8f0',fontWeight: '600',flexShrink: 1}
-  
+  tipText: { fontSize: 16, color: '#e2e8f0', fontWeight: '600' },
 });
 
 export default EnergySaved;
