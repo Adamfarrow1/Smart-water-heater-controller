@@ -1,6 +1,11 @@
 # SD-SWHC
 Senior design project to create an app to control water heaters remotely.
 
+Developing using a Windows computer:
+
+
+Developing using a Macbook:
+
 VScode:
 - run npm install to install node_modules
 - use npx expo prebuild -p ios to create prebuild files for ios.
