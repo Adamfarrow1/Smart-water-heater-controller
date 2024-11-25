@@ -44,15 +44,14 @@ In order for the app to run on an iPhone with no active metro server running on 
 
 # Running the ESP32:
 **WifiProv:**
-Library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
+- Library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
 ](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
-per the github link above, WifiProv.beginprovision includes a bool variable reset_provisioned: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected Wi-Fi and therefore cannot be found.
-If set to false, the esp32 will attempt to reconnect to the last saved wifi network. Once the esp32 reconnects to the wifi, it connects to the firebase with the last saved deviceId and continues to update the realtime database. This was mainly used to ensure that even if the esp32 has been shut off or lost connection, it will attempt to reconnect to the  same wifi. 
-
-If set to true, the esp32 will ask for provisioning credientials every time it is powered on. A new deviceId will also be generated. This was mainly used to simulate a situation where different devices are being added and need to be connected to wifi for the first time. 
+-Per the github link above, WifiProv.beginprovision includes a bool variable reset_provisioned: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected Wi-Fi and therefore cannot be found.
+    - If set to false, the esp32 will attempt to reconnect to the last saved wifi network. Once the esp32 reconnects to the wifi, it connects to the firebase with the last saved deviceId and continues to update the realtime database. This was mainly used to ensure that even if the esp32 has been shut off or lost connection, it will attempt to reconnect to the  same wifi. 
+    - If set to true, the esp32 will ask for provisioning credientials every time it is powered on. A new deviceId will also be generated. This was mainly used to simulate a situation where different devices are being added and need to be connected to wifi for the first time. 
 
 **Firebase ESP Client:**
-Use this link for more information about this library: https://github.com/rolan37/Firebase-ESP-Client-main
+- Use this link for more information about this library: https://github.com/rolan37/Firebase-ESP-Client-main
 
 **SimpleBLE:**
 In the case where the esp32 is already connected to wifi, SimpleBLE was used to broadcast a BLE signal to be disoverable by the our mobile app. If this signal was being broadcast, that meant that the mobile app can send the new user UID through a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
