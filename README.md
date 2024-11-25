@@ -1,5 +1,5 @@
 # SD-SWHC
-Senior design project to create an app to control water heaters remotely.
+This project involves the development of a Smart Water Heater Controller using ESP32 technology. The goal was to create an energy-efficient system that could monitor and control water heater usage based on user-defined parameters and environmental data.
 
 # Developing using a Windows computer (limited see MacOS section for full functionality):
 
