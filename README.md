@@ -37,28 +37,35 @@ This project involves the development of a Smart Water Heater Controller using E
 
 **Running the app on an iPhone (no active metro server, using jsbundle instead).**
 In order for the app to run on an iPhone with no active metro server running on vscode, you must generate a jsbundle file.
-- on VScode: Build bundle with npx expo export:embed --entry-file='node_modules/expo/AppEntry.js' --bundle output='./ios/main.jsbundle' --dev=false --platform='ios'
-- Xcode: Click on top bar of the project, select "Edit Scheme", select "Build Configuration" - Release
+- on VScode: Build bundle with `npx expo export:embed --entry-file='node_modules/expo/AppEntry.js' --bundle output='./ios/main.jsbundle' --dev=false --platform='ios'`
+- Xcode: Click on top bar of the project, select `Edit Scheme`, select `Build Configuration` - Release
   -  Build phases -> Bundle React Native code and images -> Check off "For install builds only" if it's checked
 - On Xcode, select your connected device and run the app.
 
 # Running the ESP32:
 **WifiProv:**
-- Library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
-](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
-- Per the github link above, WifiProv.beginprovision includes a bool variable reset_provisioned: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected Wi-Fi and therefore cannot be found.
-    - If set to false, the ESP32 will attempt to reconnect to the last saved Wi-Fi network. Once the ESP32 reconnects to Wi-Fi, it connects to Firebase with the last saved device ID and continues to update the Realtime Database. This was mainly used to ensure that even if the ESP32 is shut off or loses connection, it will attempt to reconnect to the same Wi-Fi.
-    - If set to true, the ESP32 will ask for provisioning credentials every time it is powered on. A new device ID will also be generated. This is mainly used to simulate a situation where different devices are being added and need to be connected to Wi-Fi for the first time.
+- The WiFiProv library is used to provision Wi-Fi credentials over a BLE signal, making it easy to connect the ESP32 to a Wi-Fi network without hardcoding credentials. Learn more about WiFiProv in the [official documentation.](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
+- The `WiFiProv.beginProvision` function includes a boolean parameter, `reset_provisioned`, which determines whether to reset previously stored Wi-Fi credentials before initializing provisioning. This feature addresses issues where the ESP32 may automatically reconnect to a previously connected Wi-Fi network, making it undiscoverable for new provisioning
+    - If reset_provisioned is set to false:
+        - The ESP32 attempts to reconnect to the last saved Wi-Fi network without requiring new provisioning.
+        - Once reconnected, the ESP32 retrieves its last saved device ID and continues sending updates to Firebase Realtime Database.
+        - This configuration is ideal for scenarios where the ESP32 needs to maintain persistent Wi-Fi connectivity, even after power loss or disconnection.
+    - If reset_provisioned is set to true:
+        - The ESP32 clears all previously stored Wi-Fi credentials and requests new provisioning on every startup.
+        - A new device ID is also generated during the provisioning process.
+        - This setting is particularly useful for testing or simulating scenarios where new devices are being added and connected to Wi-Fi for the first time.
 
 **Firebase ESP Client:**
 - Use this link for more information about this library: https://github.com/rolan37/Firebase-ESP-Client-main
 
 **SimpleBLE:**
-- In the case where the esp32 is already connected to wifi, SimpleBLE was used to broadcast a BLE signal to be disoverable by the our mobile app. If this signal was being broadcast, that meant that the mobile app can send the new user UID through a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
+- When the ESP32 is already connected to Wi-Fi, SimpleBLE is used to broadcast a BLE signal, making the device discoverable by our mobile app. This allows the app to send a new user's UID through a POST request to the ESP32.
+- However, broadcasting a BLE signal continuously can consume significant memory and processing power on the ESP32, which may affect its performance. To address this limitation, we implemented an alternative method for discoverability using mDNS.
 
-**REST API:**
-- An alternative to a user adding an existing device to their account would be sending the user’s UID over the wifi network. If the mobile app and esp32 are connected to the same network, we can send the user’s uid to the esp32 and the esp32 will update the realtime database accordingly. 
-
+**mDNS:**
+- As an alternative to BLE, we implemented mDNS (Multicast DNS), which allows the ESP32 to be discoverable via a custom hostname on the local network. This enables API calls using the hostname instead of relying on a dynamic or static IP address.
+- When the mobile app and ESP32 are connected to the same network, the app can send the user's UID to the ESP32 via HTTP. The ESP32 then updates the Firebase Realtime Database with the new user's information. This approach minimizes memory usage compared to continuous BLE broadcasting while maintaining discoverability.
+  
 **Stochastic Algorithm Filter**
 - The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
     This function manages the water heater's load by considering:
