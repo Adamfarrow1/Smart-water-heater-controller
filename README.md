@@ -3,15 +3,15 @@ This project involves the development of a Smart Water Heater Controller using E
 
 # Developing using a Windows computer (limited see MacOS section for full functionality):
 
-**important** : if you plan on developing with windows you need to comment out any of the imports and functions that use "@react-native-google-signin/google-signin" (login.js) or "@orbital-systems/react-native-esp-idf-provisioning" (BLEdemo.js, AddDevice.js, ScanScreen.js) 
+**Important** : if you plan on developing with windows you need to comment out any of the imports and functions that use "@react-native-google-signin/google-signin" (login.js) or "@orbital-systems/react-native-esp-idf-provisioning" (BLEdemo.js, AddDevice.js, ScanScreen.js) 
 
 **Prequisites**:
 - Node.js installed
-- Expo CLI installed globally: "npm install -g expo-cli"
+- Expo CLI installed globally: `npm install -g expo-cli`
 
 **VScode:**
-- run "npm install" inside the terminal to install node_modules
-- run "npm start" or "npx expo start" to begin developement server
+- run `npm install` inside the terminal to install node_modules
+- run `npm start` or `npx expo start` to begin developement server
 - Now use the "expo go" app to scan the QR code that is provided
 - You can now see the application on the phone 
 
@@ -43,6 +43,8 @@ In order for the app to run on an iPhone with no active metro server running on 
 - On Xcode, select your connected device and run the app.
 
 # Running the ESP32:
+The ESP32 serves as the core device for this project, leveraging its BLE and Wi-Fi capabilities to facilitate seamless connectivity and real-time data management. It provisions Wi-Fi credentials through BLE using the WiFiProv library, allowing users to connect the device to a network without hardcoding credentials. Once connected to Wi-Fi, the ESP32 integrates with Firebase Realtime Database (RTDB) using the Firebase ESP Client library to enable real-time data synchronization and updates. The ESP32 supports discoverability through BLE broadcasting or mDNS, providing flexibility for the mobile app to send user data and manage device associations. Additionally, it employs a stochastic algorithm to regulate water heater load based on grid conditions, ensuring efficient operation while maintaining up-to-date information in Firebase RTDB. These features collectively enable robust, real-time device control and data processing while optimizing system performance.
+
 **WifiProv:**
 - The WiFiProv library is used to provision Wi-Fi credentials over a BLE signal, making it easy to connect the ESP32 to a Wi-Fi network without hardcoding credentials. Learn more about WiFiProv in the [official documentation.](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
 - The `WiFiProv.beginProvision` function includes a boolean parameter, `reset_provisioned`, which determines whether to reset previously stored Wi-Fi credentials before initializing provisioning. This feature addresses issues where the ESP32 may automatically reconnect to a previously connected Wi-Fi network, making it undiscoverable for new provisioning
