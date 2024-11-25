@@ -54,13 +54,13 @@ In order for the app to run on an iPhone with no active metro server running on 
 - Use this link for more information about this library: https://github.com/rolan37/Firebase-ESP-Client-main
 
 **SimpleBLE:**
-In the case where the esp32 is already connected to wifi, SimpleBLE was used to broadcast a BLE signal to be disoverable by the our mobile app. If this signal was being broadcast, that meant that the mobile app can send the new user UID through a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
+- In the case where the esp32 is already connected to wifi, SimpleBLE was used to broadcast a BLE signal to be disoverable by the our mobile app. If this signal was being broadcast, that meant that the mobile app can send the new user UID through a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
 
 **REST API:**
-An alternative to a user adding an existing device to their account would be sending the user’s UID over the wifi network. If the mobile app and esp32 are connected to the same network, we can send the user’s uid to the esp32 and the esp32 will update the realtime database accordingly. 
+- An alternative to a user adding an existing device to their account would be sending the user’s UID over the wifi network. If the mobile app and esp32 are connected to the same network, we can send the user’s uid to the esp32 and the esp32 will update the realtime database accordingly. 
 
 **Stochastic Algorithm Filter**
-The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
+- The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
     This function manages the water heater's load by considering:
     - The current grid frequency (ft).
     - Randomness to make decisions probabilistically.
