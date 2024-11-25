@@ -73,7 +73,7 @@ In order for the app to run on an iPhone with no active metro server running on 
 Note: This sketch takes up a lot of space for the app and may not be able to flash with default setting on some chips.
   If you see Error like this: "Sketch too big"
   In Arduino IDE go to: Tools > Partition scheme > chose anything that has more than 1.4MB APP
-   - for example "No OTA (2MB APP/2MB SPIFFS)"
-   - Tools > Flash mode > to QIO
-   - Tools > Partition scheme > Huge APP
+  - Tools > Partition scheme > Huge APP
+  - Tools > Flash mode > to QIO
+   
      
