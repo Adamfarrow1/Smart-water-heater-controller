@@ -18,7 +18,7 @@ Senior design project to create an app to control water heaters remotely.
 
 
 
-# Developing using a Macbook:
+# Developing using a MacOS:
 
 **VScode:**
 - run npm install to install node_modules
