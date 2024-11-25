@@ -32,11 +32,11 @@ Senior design project to create an app to control water heaters remotely.
     - remove Push Notifications from capabilies if you're not using a paid subcription of an Apple Developer account.
     - Add your iPhone device in Xcode. To view this window, choose Window > Devices and Simulators. View and configure simulated devices from the Simulators tab. Use the (+) button to add and configure your iPhone for testing.
  
-Running the app on an iPhone (must be on the same wifi network and sharing the same ip address):
+**Running the app on an iPhone (must be on the same wifi network and sharing the same ip address):**
 - on VScode: use command "npx expo start" to start the metro server
 - on Xcode: use Build to compile and run the app on your iPhone.
 
-Running the app on an iPhone (no active metro server, using jsbundle instead).
+**Running the app on an iPhone (no active metro server, using jsbundle instead).**
 In order for the app to run on an iPhone with no active metro server running on vscode, you must generate a jsbundle file.
 - on VScode: Build bundle with npx expo export:embed --entry-file='node_modules/expo/AppEntry.js' --bundle output='./ios/main.jsbundle' --dev=false --platform='ios'
 - Xcode: Click on top bar of the project, select "Edit Scheme", select "Build Configuration" - Release
