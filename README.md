@@ -65,7 +65,8 @@ In order for the app to run on an iPhone with no active metro server running on 
     - The current grid frequency (ft).
     - Randomness to make decisions probabilistically.
     - The state of the water heater and external factors like scheduled off periods.
-The function controlWaterHeater executes the decision made by manageWaterHeaterLoad by:
+    
+- The function controlWaterHeater executes the decision made by manageWaterHeaterLoad by:
     - Turning the heater on or off.
     - Updating the Firebase Realtime Database (RTDB) with the current status.
 
