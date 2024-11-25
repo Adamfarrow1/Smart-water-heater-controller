@@ -1,7 +1,7 @@
 # SD-SWHC
 Senior design project to create an app to control water heaters remotely.
 
-**Developing using a Windows computer (limited see MacOS section for full functionality):**
+# Developing using a Windows computer (limited see MacOS section for full functionality):
 
 **important** : if you plan on developing with windows you need to comment out any of the imports and functions that use "@react-native-google-signin/google-signin" (login.js) or "@orbital-systems/react-native-esp-idf-provisioning" (BLEdemo.js, AddDevice.js, ScanScreen.js) 
 
@@ -18,7 +18,7 @@ Senior design project to create an app to control water heaters remotely.
 
 
 
-**Developing using a Macbook:**
+# Developing using a Macbook:
 
 **VScode:**
 - run npm install to install node_modules
