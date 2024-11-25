@@ -6,6 +6,12 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
   If you see Error like this: "Sketch too big"
   In Arduino IDE go to: Tools > Partition scheme > chose anything that has more than 1.4MB APP
    - for example "No OTA (2MB APP/2MB SPIFFS)"
+   - Tools > Flash mode > to QIO
+   - Tools > Partition scheme > Huge APP
+
+  If you want to automatically delete previously provisioned data
+   - set reset_provisioned to true
+   -
 */
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -13,7 +19,7 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
 #include "WiFi.h"
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
-#include <String.h> // For string manipulations
+#include <String.h> 
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 #include "Preferences.h"
@@ -25,6 +31,10 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
 #include <time.h>
 #include "SimpleBLE.h"
 #include <nvs_flash.h>
+#include <esp_wifi.h>
+
+//Wifi Saved Preferences
+Preferences preferences;
 
 // Initialize the WebServer on port 80
 WebServer server(80);
@@ -35,7 +45,7 @@ SimpleBLE ble;
 const char *pop = "abcd1234";           // Proof of possession - otherwise called a PIN - string provided by the device, entered by the user in the phone app
 const char *service_name = "PROV_123";  // Name of your device (the Espressif apps expects by default device name starting with "Prov_")
 const char *service_key = NULL;         // Password used for SofAP method (NULL = no password needed)
-bool reset_provisioned = false;          // When true the library will automatically delete previously provisioned data.
+bool reset_provisioned = true;          // When true the library will automatically delete previously provisioned data.
 
 #define API_KEY "AIzaSyCw_bUWIBcoZ42BKCAScJOfO2q2KyThJ9U"
 #define DATABASE_URL "https://git-wh-default-rtdb.firebaseio.com"
@@ -45,29 +55,28 @@ bool reset_provisioned = false;          // When true the library will automatic
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-
-bool isFireBaseConnected = false;
-bool isFireBaseAuthed = false;
-bool signupOK = false;
 FirebaseJson json;
 
-//Wifi Saved Preferences
-Preferences preferences;
+//Flags
+bool isFireBaseConnected = false;
+bool signupOK = false;
+bool isUIDobtained = false; 
+bool isScheduledOff = false;
+bool previousGridStatus = false; 
 
 String ssid = "";
 String password = "";
 String deviceId = "";
 String uid = "";
 String ipAddress = "";
-bool isUIDobtained = false; 
-bool firstTime = true; // first time connection
-bool isScheduledOff = false;
+
 //time 
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = -18000;  // EST is UTC-5 hours
 const int daylightOffset_sec = 3600;  // 1 hour DST 
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
+
 #define RX_PIN 16
 #define TX_PIN 17
 
@@ -112,45 +121,90 @@ const float MAX_VOLTAGE = 4.2; // Maximum voltage corresponding to 100%
 const unsigned long POLLING_INTERVAL = 10000; // 10 seconds
 unsigned long lastPollTime = 0;
 
-// Function to control the water heater and update grid status in Firebase
+// update the number of relayInteractions in firebase rtdb
+void incrementRelayInteractions() {
+    String relayInteractionsPath = "controllers/" + deviceId + "/relayInteractions";
+
+    // Use Firebase transaction to safely increment the value
+    if (Firebase.RTDB.getInt(&fbdo, relayInteractionsPath)) {
+        int currentCount = fbdo.intData();
+        currentCount += 1;
+        if (Firebase.RTDB.setInt(&fbdo, relayInteractionsPath, currentCount)) {
+            Serial.println("Relay interactions count incremented successfully.");
+        } else {
+            Serial.printf("Failed to increment relay interactions: %s\n", fbdo.errorReason().c_str());
+        }
+    } else {
+        // If the path doesn't exist, initialize it to 1
+        if (Firebase.RTDB.setInt(&fbdo, relayInteractionsPath, 1)) {
+            Serial.println("Relay interactions count initialized to 1.");
+        } else {
+            Serial.printf("Failed to initialize relay interactions: %s\n", fbdo.errorReason().c_str());
+        }
+    }
+}
+
+
+// This function executes the decision made in manageWaterHeaterLoad
 void controlWaterHeater(bool turnOn, bool isGridControlled) {
     String statusPath = "controllers/" + deviceId + "/status";
     String gridStatusPath = "controllers/" + deviceId + "/gridStatus";
 
-    if (turnOn) {
-        if (digitalRead(RELAY_PIN) == HIGH) { // If heater is currently off
-            Serial.println("Turning on the water heater.");
-            digitalWrite(RELAY_PIN, LOW); // Turn ON (assuming LOW activates)
-
-            if (Firebase.RTDB.setBool(&fbdo, statusPath, true)) {
-                Serial.println("Device status updated to ON in Firebase.");
-            } else {
-                Serial.printf("Failed to update device status to ON: %s\n", fbdo.errorReason().c_str());
-            }
+    //if we need to turn on, update RELAY_PIN, LOW and update the status and gridStatus to true
+    if (turnOn)
+    {
+        if (digitalRead(RELAY_PIN) == HIGH) 
+        { 
+          // If heater is currently off
+          Serial.println("Turning on the water heater.");
+          digitalWrite(RELAY_PIN, LOW); // Turn ON (assuming LOW activates)
+          //Update the device status to true (on)
+          if (Firebase.RTDB.setBool(&fbdo, statusPath, true)) 
+          {
+            Serial.println("Device status updated to ON in Firebase.");
+          } 
+          else 
+          {
+            Serial.printf("Failed to update device status to ON: %s\n", fbdo.errorReason().c_str());
+          }
         }
 
         if (isGridControlled) {
             if (Firebase.RTDB.setBool(&fbdo, gridStatusPath, true)) {
                 Serial.println("Grid status updated to ON in Firebase.");
-            } else {
+
+                // Count relay interactions by keeping track of the previous gridStatus
+                if (!previousGridStatus) {
+                    incrementRelayInteractions(); // Increment the relay interactions count
+                }
+                previousGridStatus = true; // Update the previous state
+            } 
+            else {
                 Serial.printf("Failed to update grid status to ON: %s\n", fbdo.errorReason().c_str());
             }
         }
-    } else {
-        if (digitalRead(RELAY_PIN) == LOW) { // If heater is currently on
-            Serial.println("Turning off the water heater.");
-            digitalWrite(RELAY_PIN, HIGH); // Turn OFF (assuming HIGH deactivates)
+    } 
+    else //Turn off the water heater and update accordingly
+    {
+        if (digitalRead(RELAY_PIN) == LOW) 
+        { // If heater is currently on
+          Serial.println("Turning off the water heater.");
+          digitalWrite(RELAY_PIN, HIGH); // Turn OFF (assuming HIGH deactivates)
 
-            if (Firebase.RTDB.setBool(&fbdo, statusPath, false)) {
-                Serial.println("Device status updated to OFF in Firebase.");
-            } else {
-                Serial.printf("Failed to update device status to OFF: %s\n", fbdo.errorReason().c_str());
-            }
+          if (Firebase.RTDB.setBool(&fbdo, statusPath, false)) 
+          {
+            Serial.println("Device status updated to OFF in Firebase.");
+          } 
+          else 
+          {
+            Serial.printf("Failed to update device status to OFF: %s\n", fbdo.errorReason().c_str());
+          }
         }
 
         if (isGridControlled) {
             if (Firebase.RTDB.setBool(&fbdo, gridStatusPath, false)) {
                 Serial.println("Grid status updated to OFF in Firebase.");
+                previousGridStatus = false; // Update the previous state
             } else {
                 Serial.printf("Failed to update grid status to OFF: %s\n", fbdo.errorReason().c_str());
             }
@@ -158,27 +212,80 @@ void controlWaterHeater(bool turnOn, bool isGridControlled) {
     }
 }
 
-// Function to manage water heater load based on frequency
+/* Stochastic algorithm
+The function receives the grid frequency (ft) as input, which is compared against the nominal frequency (f0). 
+Using randomness ensures that the decision-making is probabilistic rather than deterministic.
+If the frequency is under nominal:
+  Turn off the heater with a higher probability (randomFactor < offProbability).
+  otherwise, keep it on.
+If the frequency is over nominal:
+  Turn on the heater with a higher probability (randomFactor < onProbability).
+  Otherwise, keep it off.
+For nominal frequency, decisions are based on default probabilities:
+  Turn the heater on or off probabilistically.
+*/
 void manageWaterHeaterLoad(float ft) {
-    //float ft = lastValidFrequency;
-   // float ft = measureFrequency(); // Measure frequency
     Serial.print("Current frequency: ");
     Serial.println(ft);
-  /*
-  Under-Frequency Condition (Grid Overload): When there is high demand and the grid is overloaded, the system cannot maintain the nominal frequency, resulting in a drop in frequency (under-frequency condition).
-   In this state, some loads (such as your water heater) may need to turn off to help reduce grid load. 
-   So, in this case, gridStatus should be set to false.*/
-    if (ft < f0) { // Under-frequency condition (grid is overloaded)
-        Serial.println("Under-frequency detected: Turning off the water heater.");
-        controlWaterHeater(false, true); // Grid-initiated turn off
-    } else if (ft > f0) { // Over-frequency condition (grid has excess power)
-        Serial.println("Over-frequency detected: Turning on the water heater.");
-        controlWaterHeater(true, true); // Grid-initiated turn on
-    } else { // Nominal frequency
-        Serial.println("Frequency is nominal: Ensuring water heater is on.");
-        controlWaterHeater(true, true); // Ensure the heater is on when frequency is normal
+
+    // Generate a random probability (0 to 1)
+    float randomFactor = random(0, 100) / 100.0;
+
+    // Probability thresholds
+    float offProbability = 0.3; // Default probability to turn off the heater
+    float onProbability = 0.7;  // Default probability to turn on the heater
+
+    // Adjust probabilities based on frequency
+    if (ft < f0) 
+    { 
+      // Under-frequency (grid overload)
+      offProbability += 0.2;  // Increase the likelihood of turning off
+      Serial.printf("Under-frequency detected. Probability to turn off: %.2f\n", offProbability);
+
+      if (randomFactor < offProbability) 
+      {
+        Serial.println("Stochastic decision: Turning off the water heater.");
+        controlWaterHeater(false, true);
+      } 
+      else 
+      {
+        Serial.println("Stochastic decision: Keeping the water heater on.");
+      }
+    } 
+    else if (ft > f0) 
+    { // Over-frequency (grid has excess power)
+      onProbability += 0.2;  // Increase the likelihood of turning on
+      Serial.printf("Over-frequency detected. Probability to turn on: %.2f\n", onProbability);
+
+      if (randomFactor < onProbability) 
+      {
+         Serial.println("Stochastic decision: Turning on the water heater.");
+        controlWaterHeater(true, true);
+      } 
+      else 
+      {
+        Serial.println("Stochastic decision: Keeping the water heater off.");
+      }
+    } 
+    else 
+    { // Nominal frequency (balanced grid)
+      Serial.println("Frequency is nominal: Stochastic behavior engaged.");
+      if (!isScheduledOff) 
+      {
+        if (randomFactor < onProbability)
+        {
+          Serial.println("Stochastic decision: Turning on the water heater.");
+          controlWaterHeater(true, true);
+        }
+        else 
+        {
+          Serial.println("Stochastic decision: Keeping the water heater off.");
+          controlWaterHeater(false, true);
+        }
+      }
     }
 }
+
 
 void measureVoltage() {
   float adc0 = analogRead(ADC_PIN_CH0);
@@ -194,7 +301,7 @@ void measureVoltage() {
   res[1] = ch1_voltage;
 }
 
-// Function to calculate battery percentage
+// Function to calculate battery percentage f
 float calculateBatteryPercentage() {
     float adcValue = analogRead(BATTERY_ADC_PIN);
     float voltage = (adcValue / 4095.0) * 3.3; // Calculate voltage from ADC value
@@ -292,25 +399,26 @@ String getTimeString() {
 }
 
 // WARNING: SysProvEvent is called from a separate FreeRTOS task (thread)!
+// Each case is for each step of the provisioning procress. Prov_start, prov_cred_recv, etc
 void SysProvEvent(arduino_event_t *sys_event) {
   switch (sys_event->event_id) {
-    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP: //WIFI connected, ip available
       Serial.print("\nConnected IP address : ");
       Serial.println(IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr));
       ipAddress = ipAddress = IPAddress(sys_event->event_info.got_ip.ip_info.ip.addr).toString(); // Store the IP address
       printWiFiStatus();
       Firebase.reconnectNetwork(true);
-
       break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: Serial.println("\nDisconnected. Connecting to the AP again... "); 
-    if (ssid != "" && password != "") {
-        WiFi.begin(ssid.c_str(), password.c_str());
-        Serial.printf("Reconnecting to Wi-Fi SSID: %s\n", ssid.c_str());
-    }
-    break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: 
+      Serial.println("\nDisconnected. Connecting to the AP again... "); 
+      if (ssid != "" && password != "") 
+      {
+          WiFi.begin(ssid.c_str(), password.c_str());
+          Serial.printf("Reconnecting to Wi-Fi SSID: %s\n", ssid.c_str());
+      }
+      break;
     case ARDUINO_EVENT_PROV_START:  
       Serial.println("\nProvisioning started\nGive Credentials of your access point using smartphone app"); 
-      
       break;
     case ARDUINO_EVENT_PROV_CRED_RECV:
     {
@@ -340,25 +448,30 @@ void SysProvEvent(arduino_event_t *sys_event) {
     case ARDUINO_EVENT_PROV_CRED_SUCCESS: 
       Serial.println("\nProvisioning Successful"); 
       break;
-    case ARDUINO_EVENT_PROV_END:          Serial.println("\nProvisioning Ends"); 
-   
-    break;
+    case ARDUINO_EVENT_PROV_END:          
+      Serial.println("\nProvisioning Ends"); 
+      break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED: 
       Serial.println("CONNECTED."); 
+     /* Options for keeping the ESP32 discoverable to other users:
+     * 1. mDNS: Enables the ESP32 to be discoverable via a custom hostname on the local network,
+     *    allowing API calls using the hostname instead of an IP address.
+     * 2. BLE (optional): Broadcasts a BLE signal to remain discoverable for BLE-based provisioning.
+     */
       if (MDNS.begin("esp32")) 
       {  // "esp32" is the hostname
         Serial.println("mDNS responder started");
       }
-       // Set up the server to handle UID requests
-      server.on("/receiveUID", HTTP_POST, handleReceiveUID);
+      server.on("/receiveUID", HTTP_POST, handleReceiveUID);  // Set up the server to handle UID requests
       server.begin(); // Start the server
-      delay(500);
-   //  advertiseBLE();
+      delay(500); // Optional delay to ensure stability before further actions
+   //  advertiseBLE(); //Uncomment this to enable BLE advertising for discoverability
       break;
     default:                              break;
   }
 }
 
+//Optional, use SimeplBLE for allowing other users to add this device to their account, device must already be connected to wifi
 void advertiseBLE() {
     static bool isAdvertising = false;
 
@@ -370,6 +483,7 @@ void advertiseBLE() {
     }
 }
 
+//Useful for debugging
 void printWiFiStatus() {
   wl_status_t status = WiFi.status();
   
@@ -404,29 +518,31 @@ void printWiFiStatus() {
   }
 }
 
-
-//Update to only add the device's UID to the user's devices array.
+//Update to only add the device's UID to the user's devices array and authorize whenever the token expires
 void intializeFirebase() {
    config.api_key = API_KEY;
    config.database_url = DATABASE_URL;
    Serial.println("Signing up to Firebase...");
 
-   if (Firebase.signUp(&config, &auth, "", "")) {
+   if (Firebase.signUp(&config, &auth, "", "")) 
+   {
     Serial.println("Firebase sign up successful");
     signupOK = true;
     isFireBaseConnected = true;
     digitalWrite(LED, HIGH);
 
-    // Create FirebaseJson object to store the device data
+    //If the deviceId is empty, it's a brand new device and needs to be autheticated for the first time
     if(deviceId.isEmpty())
     {
-      deviceId = auth.token.uid.c_str();  // Get the UID from the token
+      // Get the unique id from the auth token, Store device ID in JSON. and 
+      deviceId = auth.token.uid.c_str();  // Get the unique id from the auth token
       json.set("deviceID", deviceId); // Store device ID in JSON
       Serial.println("Device authenticated.. Device ID is: " + deviceId);
-      String gridStatusPath = "controllers/" + deviceId + "/gridStatus";
-      if (Firebase.RTDB.setBool(&fbdo, gridStatusPath, true)) {
-        Serial.println("Grid status initialized to ON in Firebase.");
-    }
+      String statusPath = "controllers/" + deviceId + "/status";
+      if (Firebase.RTDB.setBool(&fbdo, statusPath, true)) 
+      {
+        Serial.println("The intial status initialized to ON in Firebase.");
+      }
       // Save deviceId in persistent storage
       preferences.begin("device", false);
       preferences.putString("deviceId", deviceId); 
@@ -434,21 +550,20 @@ void intializeFirebase() {
     }
     //json.set("deviceID", deviceId); 
    // Serial.println("Device authenticated.. Device ID is: "+ deviceId);
-
-  } else {
+  } 
+  else {
     Serial.printf("Firebase sign up failed: %s\n", config.signer.signupError.message.c_str());
   }
-
   config.token_status_callback = tokenStatusCallback; // see addons/TokenHelper.h
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 }
 
-
-
+//Handle POST request, receving a user's UID over wifi from the mobile app
 void handleReceiveUID() {
     // Check if Wi-Fi is connected before handling the request
-    if (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) 
+    {
         Serial.println("Error: Wi-Fi is not connected");
         server.send(503, "text/plain", "Service Unavailable");
         return;
@@ -466,28 +581,29 @@ void handleReceiveUID() {
         // Parse the JSON
         if (json.setJsonData(jsonBody) == true) 
         {
-            // Extract the UID
-            if (json.get(jsonData, "uid")) 
-            {
-                uid = jsonData.stringValue; // Extract UID into the uid variable
-                Serial.print("Received UID: ");
-                Serial.println(uid);
-                isUIDobtained = true;
-                 // Create a JSON response
-                DynamicJsonDocument doc(1024);
-                doc["status"] = "success";
-                doc["message"] = "UID received successfully"; // Add a message field
-                doc["deviceId"] = deviceId;
-                String response;
-                serializeJson(doc, response);
-                server.send(200, "application/json", response); // Send valid JSON response
-                return;
-            }
+          // Extract the UID
+          if (json.get(jsonData, "uid")) 
+          {
+            uid = jsonData.stringValue; // Extract UID into the uid variable
+            Serial.print("Received UID: ");
+            Serial.println(uid);
+            isUIDobtained = true;
+            // Create a JSON response
+            DynamicJsonDocument doc(1024);
+            doc["status"] = "success";
+            doc["message"] = "UID received successfully"; // Add a message field
+            doc["deviceId"] = deviceId;
+            String response;
+            serializeJson(doc, response);
+            server.send(200, "application/json", response); // Send valid JSON response
+            return;
+          }
       }
     }  
   server.send(400, "application/json", "{\"error\":\"Invalid request\"}");
 }
 
+// Add device to the user's devices in the rtdb
 void addDeviceToUserDevices() {
     // Define the path for the user's devices
   String userDevicesPath  = "users/" + uid + "/devices/" + deviceId;
@@ -505,6 +621,7 @@ void addDeviceToUserDevices() {
     }
 }
 
+//Check if the device already exist in the user's list of devices. 
 void checkDeviceExists(String uid, String deviceId) {
     String userDevicesPath = "users/" + uid + "/devices/" + deviceId;
     
@@ -524,27 +641,10 @@ void checkDeviceExists(String uid, String deviceId) {
     addDeviceToUserDevices();
 }
 
+//Handles sending the sensor data to rtdb
 void sendSensorDataToFirebase(float frequency, float temperature) {
     String devicePath = "controllers/" + deviceId;
-
-    // Get current time for timestamp
     String timeString = getTimeString();
-
-    if(firstTime == true)
-    {
-        String deviceStatusPath = "controllers/" + deviceId + "/status";
-        if (Firebase.RTDB.setBool(&fbdo, deviceStatusPath, true)) {
-            Serial.println("Device status set to ON in Firebase.");
-        } else {
-            Serial.printf("Failed to set initial device status: %s\n", fbdo.errorReason().c_str());
-        }
-    
-        // Also, save 'firstTime' as false to avoid re-running this block
-        preferences.begin("device", false);
-        preferences.putBool("firstTime", false);
-        preferences.end();
-    }
-
     FirebaseJson frequencyJson;
     FirebaseJson temperatureJson;
 
@@ -571,6 +671,7 @@ void sendSensorDataToFirebase(float frequency, float temperature) {
     }
 }
 
+//Check for change in the status from the mobile app
 void monitorManualStatus() {
     String statusPath = "controllers/" + deviceId + "/status";
     
@@ -580,13 +681,13 @@ void monitorManualStatus() {
             Serial.println("Water heater manually turned off.");
             digitalWrite(RELAY_PIN, HIGH); // Turn OFF heater
             //lastValidFrequency = 0; // For development purposes
-        } else {
+        } 
+        else if(status && isScheduledOff == false) {
             Serial.println("Water heater manually turned on.");
             digitalWrite(RELAY_PIN, LOW); // Turn ON heater
         }
     }
 }
-
 
 // Helper function to get today's date in "yyyy-mm-dd" format
 String getCurrentDate() {
@@ -608,9 +709,11 @@ time_t parseTime(const String &dateTimeStr) {
     return 0;
 }
 
+//monitors if the device is scheduled to be off
 void monitorScheduledOff(unsigned long lastPollTime, unsigned long currentMillis) {
-    String today = getCurrentDate(); // Helper function to get today's date in "yyyy-mm-dd" format
-    String schedulePath = "controllers/" + deviceId + "/scheduling/" + today + 'eventId';
+    String today = getCurrentDate(); // Get today's date in "yyyy-mm-dd" format
+    String schedulePath = "controllers/" + deviceId + "/scheduling/" + today;
+    String scheduleStatusPath = "controllers/" + deviceId + "/scheduleStatus";
 
     // Validate input
     if (deviceId.isEmpty() || today.isEmpty()) {
@@ -618,98 +721,83 @@ void monitorScheduledOff(unsigned long lastPollTime, unsigned long currentMillis
         return;
     }
 
-    // Attempt to get the schedule from Firebase
+    // Fetch the schedule JSON from Firebase
     if (!Firebase.RTDB.getJSON(&fbdo, schedulePath)) {
         Serial.printf("Failed to retrieve schedule JSON. Firebase error: %s\n", fbdo.errorReason().c_str());
         return;
     }
 
-    FirebaseJson &schedule = fbdo.to<FirebaseJson>();
-    if (schedule.iteratorBegin() == 0) {
-        Serial.println("No events found in today's schedule.");
-        return;
-    }
+    FirebaseJson schedule = fbdo.to<FirebaseJson>();
+    // Used for debugging
+    Serial.println("Fetched Schedule JSON:");
+    schedule.toString(Serial, true);
 
-    // Convert polling times to seconds
-    time_t lastPoll = lastPollTime / 1000;
-    time_t currentPoll = currentMillis / 1000;
     time_t now = time(nullptr); // Current time in seconds
+    time_t lastPoll = lastPollTime / 1000; // Convert lastPollTime to seconds
+    time_t currentPoll = currentMillis / 1000; // Convert currentMillis to seconds
 
     FirebaseJsonData eventJsonData;
-    size_t iteratorIndex = 0;
-    int type = 0;
-    String key, value;
+    bool shouldTurnOff = false; // Track if the heater should be off
 
-    bool isOffScheduled = false; // Flag to track if the controller should be turned off
+    size_t totalKeys = schedule.iteratorBegin();
+    for (size_t i = 0; i < totalKeys; i++) {
+        String key, value;
+        int type;
 
-    // Iterate through the schedule for today
-    while (schedule.iteratorGet(iteratorIndex, type, key, value)) {
+        // Get the event JSON
+        schedule.iteratorGet(i, type, key, value);
         FirebaseJson eventJson(value);
 
         // Extract "from" and "to" times
-        if (!eventJson.get(eventJsonData, "from") || eventJsonData.stringValue.isEmpty()) {
-            Serial.println("Error: Missing or empty 'from' time.");
-            iteratorIndex++;
-            continue;
-        }
-        String fromTime = eventJsonData.stringValue;
-
-        if (!eventJson.get(eventJsonData, "to") || eventJsonData.stringValue.isEmpty()) {
-            Serial.println("Error: Missing or empty 'to' time.");
-            iteratorIndex++;
-            continue;
-        }
-        String toTime = eventJsonData.stringValue;
-
-        // Normalize times by removing any non-standard spaces or characters
-        fromTime.trim();
-        toTime.trim();
-
+        String fromTime, toTime;
+        if (eventJson.get(eventJsonData, "from")) {
+            fromTime = eventJsonData.stringValue;
+        } 
+        if (eventJson.get(eventJsonData, "to")) {
+            toTime = eventJsonData.stringValue;
+        } 
         // Parse timestamps
         time_t fromTimestamp = parseTime(today + " " + fromTime);
         time_t toTimestamp = parseTime(today + " " + toTime);
 
-        // Log the parsed timestamps for debugging
-        Serial.print("Parsed From Timestamp: ");
-        Serial.println(fromTimestamp);
-        Serial.print("Parsed To Timestamp: ");
-        Serial.println(toTimestamp);
-
-        if (fromTimestamp == 0 || toTimestamp == 0) {
+        if (fromTimestamp == 0 || toTimestamp == 0) 
+        {
             Serial.println("Error: Invalid timestamp parsing.");
-            iteratorIndex++;
             continue;
         }
-
-        // Check if any part of the schedule overlaps the polling period or current time
-        if ((fromTimestamp <= now && now <= toTimestamp) || // Current time is within the schedule
-            (fromTimestamp >= lastPoll && fromTimestamp <= currentPoll) || // Schedule starts within the polling window
-            (toTimestamp >= lastPoll && toTimestamp <= currentPoll) || // Schedule ends within the polling window
-            (fromTimestamp <= lastPoll && toTimestamp >= currentPoll)) { // Schedule completely overlaps the polling window
-            isOffScheduled = true; // Mark that the controller should be turned off
-            isScheduledOff = true;
+        // Check if the event is currently active or starts within the polling interval
+        if ((fromTimestamp <= now && now <= toTimestamp) || (fromTimestamp >= lastPoll && fromTimestamp <= currentPoll)) 
+        { // Event starts within polling interval
+            shouldTurnOff = true;
             break;
         }
-
-        iteratorIndex++;
     }
 
     schedule.iteratorEnd(); // Clean up iterator
 
-    // Update the controller state based on the schedule
-    if (isOffScheduled) {
-        Serial.println("Scheduled water heater OFF detected.");
-        digitalWrite(RELAY_PIN, HIGH); // Turn off the heater
-        //lastValidFrequency = 0;       // Optional: Set frequency to 0 for development
-    } else {
-        Serial.println("No active scheduled OFF event. Turning water heater ON.");
-        digitalWrite(RELAY_PIN, LOW); // Turn on the heater
-        isScheduledOff = false;
+    // Update the scheduleStatus and heater state
+    if (shouldTurnOff && !isScheduledOff) 
+    {
+      Serial.println("Scheduled water heater OFF detected.");
+      digitalWrite(RELAY_PIN, HIGH); // Turn off the heater
+      Firebase.RTDB.setBool(&fbdo, scheduleStatusPath, true); // Set scheduleStatus to true
+      Firebase.RTDB.setBool(&fbdo, "controllers/" + deviceId + "/status", false);
+      isScheduledOff = true;
+    } 
+    else if (!shouldTurnOff && isScheduledOff) 
+    {
+      Serial.println("Scheduled water heater ON detected.");
+      digitalWrite(RELAY_PIN, LOW); // Turn on the heater
+      Firebase.RTDB.setBool(&fbdo, scheduleStatusPath, false); // Set scheduleStatus to false
+      Firebase.RTDB.setBool(&fbdo, "controllers/" + deviceId + "/status", true);
+      isScheduledOff = false;
     }
 }
+
+//used for debugging, could be removed 
 void printScheduledEvents() {
     String today = getCurrentDate(); // Helper function to get today's date in "yyyy-mm-dd" format
-    Serial.println(today);
+    Serial.println("Today's date: " + today);
     String schedulePath = "controllers/" + deviceId + "/scheduling/" + today;
 
     // Validate input
@@ -718,31 +806,38 @@ void printScheduledEvents() {
         return;
     }
 
-    // Attempt to get the schedule from Firebase
+    // Fetch the schedule JSON
     if (!Firebase.RTDB.getJSON(&fbdo, schedulePath)) {
         Serial.printf("Failed to retrieve schedule JSON. Firebase error: %s\n", fbdo.errorReason().c_str());
         return;
     }
 
+    // Log the fetched JSON
     FirebaseJson &schedule = fbdo.to<FirebaseJson>();
-    if (schedule.iteratorBegin() == 0) {
-        Serial.println("No events found in today's schedule.");
-        return;
-    }
+    Serial.println("Fetched Schedule JSON:");
+    schedule.toString(Serial, true); // Pretty print JSON data
 
+    // Extract events using get instead of iterators
     FirebaseJsonData eventJsonData;
-    size_t iteratorIndex = 0;
-    int type = 0;
-    String eventId, eventDetails;
+    String eventId;
+    String eventDetails;
 
-    Serial.println("Scheduled Events for Today:");
-    
-    // Iterate through all events for today
-    while (schedule.iteratorGet(iteratorIndex, type, eventId, eventDetails)) {
-        FirebaseJson eventJson(eventDetails);
+   /* Serial.println("Scheduled Events for Today:");
+
+    // Iterate through keys manually
+    size_t totalKeys = schedule.iteratorBegin();
+    for (size_t i = 0; i < totalKeys; i++) {
+        String key;
+        int type;
+        String value;
+
+        // Get key-value pair
+        schedule.iteratorGet(i, type, key, value);
+        FirebaseJson eventJson(value);
 
         // Extract event details
-        String fromTime, toTime, eventName;
+        String fromTime, toTime, eventName, eventTimeStamp;
+
         if (eventJson.get(eventJsonData, "from")) {
             fromTime = eventJsonData.stringValue;
         }
@@ -752,21 +847,21 @@ void printScheduledEvents() {
         if (eventJson.get(eventJsonData, "name")) {
             eventName = eventJsonData.stringValue;
         }
+        if (eventJson.get(eventJsonData, "timestamp")) {
+            eventTimeStamp = eventJsonData.stringValue;
+        }
 
-        // Print the event details
-        Serial.printf("Event ID: %s\n", eventId.c_str());
+        // Print event details
+        Serial.printf("Event ID: %s\n", key.c_str());
         Serial.printf("  Name: %s\n", eventName.c_str());
         Serial.printf("  From: %s\n", fromTime.c_str());
         Serial.printf("  To: %s\n", toTime.c_str());
-        
-        iteratorIndex++;
+        Serial.printf("  Timestamp: %s\n", eventTimeStamp.c_str());
     }
 
-    schedule.iteratorEnd(); // Clean up iterator
+    schedule.iteratorEnd(); // Clean up iterator*/
 }
-
-
-
+//Optional function: add an override feature 
 void monitorUserOverride() {
     String overridePath = "controllers/" + deviceId + "/userOverride";
     
@@ -783,12 +878,9 @@ void monitorUserOverride() {
     }
 }
 
-
 void setup() {
   Serial.begin(115200);
-  //nvs_flash_erase();
- // nvs_flash_init(); 
-  delay(7000);
+  delay(5000);
   randomSeed(analogRead(0)); // Initialize random seed
   pinMode(RELAY_PIN, OUTPUT); // Set the relay pin as an output
   digitalWrite(RELAY_PIN, HIGH); // Set the relay to HIGH (off)
@@ -796,51 +888,38 @@ void setup() {
   pinMode(inputPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(inputPin), freqCounterCallback, RISING);
   Serial.println("Setup complete. Waiting for pulses...");
+
   // Initialize SD card
-/*  if (SD.begin(5)) {
-      createFileWithHeader("/freq.txt", "Frequency");
-      createFileWithHeader("/voltage1.txt", "Voltage1");
-      createFileWithHeader("/voltage2.txt", "Voltage2");
-      createFileWithHeader("/temp.txt", "Temperature");
-      createFileWithHeader("/interactions.txt", "RelayInteractions");
-    } else {
-      Serial.println("SD card initialization failed!");
-    }*/
+  if (SD.begin(5)) 
+  {
+    createFileWithHeader("/freq.txt", "Frequency");
+    createFileWithHeader("/voltage1.txt", "Voltage1");
+    createFileWithHeader("/voltage2.txt", "Voltage2");
+    createFileWithHeader("/temp.txt", "Temperature");
+    createFileWithHeader("/interactions.txt", "RelayInteractions");
+  } else {
+    Serial.println("SD card initialization failed!");
+  }
 
   preferences.begin("wifi", true);
   ssid = preferences.getString("ssid", "");  
-  password = preferences.getString("password", "");  
-  preferences.end();
+  password = preferences.getString("password", ""); 
+  preferences.end(); 
   preferences.begin("device", true);
-  deviceId = preferences.getString("deviceId", ""); // Retrieve deviceId
-  firstTime = preferences.getBool("firstTime");
+  deviceId = preferences.getString("deviceId", "");
   preferences.end();
 
-/*if (reset_provisioned) {
-    Serial.println("Resetting provisioned data and clearing device preferences.");
-
+  // clear previous deviceId for new intialization
+  if(reset_provisioned)
+  {
     preferences.begin("device", false);
-    if (preferences.isKey("deviceId")) {
-        preferences.remove("deviceId");
-    }
-    preferences.putBool("firstTime", true);
+    preferences.clear();
     preferences.end();
-
-    // Validate the clearing process
-    preferences.begin("device", true);
-    String testDeviceId = preferences.getString("deviceId", "");
-    bool testFirstTime = preferences.getBool("firstTime", true);
-    preferences.end();
-
-    Serial.println("Preferences reset complete.");
-    Serial.printf("Device ID: %s\n", deviceId.c_str());
-    Serial.printf("First time: %s\n", firstTime ? "true" : "false");
-}*/
+  }
 
   pinMode(LED, OUTPUT);
   WiFi.onEvent(SysProvEvent);
-  delay(5000);
-    // BLE Provisioning using the ESP SoftAP Prov works fine for any BLE SoC, including ESP32, ESP32S3 and ESP32C3.
+  // BLE Provisioning using the ESP SoftAP Prov works fine for any BLE SoC, including ESP32, ESP32S3 and ESP32C3.
   #if CONFIG_BLUEDROID_ENABLED && !defined(USE_SOFT_AP)
     //Serial.println("Begin Provisioning using BLE");
     // Sample uuid that user can pass during provisioning using BLE
@@ -850,10 +929,7 @@ void setup() {
     );
     WiFiProv.printQR(service_name, pop, "ble");
   #endif
-  delay(1000);
-
- // ble.begin("ESP32 SimpleBLE");
-  
+  delay(1000); 
 }
 
 void loop() {
@@ -863,73 +939,65 @@ void loop() {
     unsigned long currentMillis = millis();
     if(WiFi.status() == WL_CONNECTED)
     {
+      printWiFiStatus(); //For debugging purpose, could be removed
       
-      printWiFiStatus();
-      
+      //If the firebase has not been connected or if the current token becomes expired -> //Autheticate in firebase
       if(isFireBaseConnected != true || Firebase.isTokenExpired())
       {
-        intializeFirebase();
-        Serial.println(deviceId);
+        //Will generate a deviceId or re-autheticate itself in the firebase to continue updating the rtdb
+        intializeFirebase(); 
       }
-        
+      
+      //We've obtained a user's uid from the mobile app,
       else if(isUIDobtained == true )
       {
-        checkDeviceExists(uid, deviceId);
+        //check if the device is already in the user's list of devices
+        checkDeviceExists(uid, deviceId); // adds device to the user's list of devices
       }  
-        
-      
-         // Configure time
-        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-        // Wait for time to be set
-        struct tm timeinfo;
-        if (getLocalTime(&timeinfo, 5000)) { // Wait for up to 5 seconds
-          Serial.println("Current local time:");
-          Serial.print("Year: ");
-          Serial.print(timeinfo.tm_year + 1900); // tm_year is years since 1900
-          Serial.print(", Month: ");
-          Serial.print(timeinfo.tm_mon + 1); // tm_mon is months since January
-          Serial.print(", Day: ");
-          Serial.print(timeinfo.tm_mday);
-          Serial.print(", Hour: ");
-          Serial.print(timeinfo.tm_hour);
-          Serial.print(", Minute: ");
-          Serial.print(timeinfo.tm_min);
-          Serial.print(", Second: ");
-          Serial.println(timeinfo.tm_sec);
-        } else {
-          Serial.println("Failed to obtain time");
-        }
-        
-        if (currentMillis - lastPollTime >= POLLING_INTERVAL)
-        {
-          // monitorScheduledOff(lastPollTime, currentMillis); // Check for schedules in the range
-           lastPollTime = currentMillis; // Update the last poll time
-          // Send additional data
-          measureFrequency();
-          measureVoltage(); // If you need voltage
-          float temperature = measureTemperature();
-          sendBatteryPercentageToFirebase();
-          sendSensorDataToFirebase(lastValidFrequency, temperature);
-           // Poll for key status updates
-          monitorManualStatus();
-         // monitorUserOverride();
-          manageWaterHeaterLoad(lastValidFrequency);
-           printScheduledEvents();
-        }
-       /* measureFrequency();
+      // Configure time
+      configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+      // Wait for time to be set
+      struct tm timeinfo;
+      if (getLocalTime(&timeinfo, 5000)) 
+      { // Wait for up to 5 seconds
+        Serial.println("Current local time:");
+        Serial.print("Year: ");
+        Serial.print(timeinfo.tm_year + 1900); // tm_year is years since 1900
+        Serial.print(", Month: ");
+        Serial.print(timeinfo.tm_mon + 1); // tm_mon is months since January
+        Serial.print(", Day: ");
+        Serial.print(timeinfo.tm_mday);
+        Serial.print(", Hour: ");
+        Serial.print(timeinfo.tm_hour);
+        Serial.print(", Minute: ");
+        Serial.print(timeinfo.tm_min);
+        Serial.print(", Second: ");
+        Serial.println(timeinfo.tm_sec);
+      } 
+      else 
+      {
+        Serial.println("Failed to obtain time");
+      }
+      //Polling used for development purposes
+      if (currentMillis - lastPollTime >= POLLING_INTERVAL)
+      {
+        monitorScheduledOff(lastPollTime, currentMillis); // Check for schedules in the range
+        lastPollTime = currentMillis; // Update the last poll time
+        measureFrequency();
         measureVoltage(); // If you need voltage
         float temperature = measureTemperature();
-
-          // Send data to Firebase (this example assumes frequency is stored in lastValidFrequency)
-          sendSensorDataToFirebase(lastValidFrequency, temperature);
-          sendBatteryPercentageToFirebase(); // Send battery percentage to Firebase
-          manageWaterHeaterLoad();*/
-        // Delay for Wi-Fi stability
-        delay(5000);
-        Serial.println();
-
+        sendBatteryPercentageToFirebase();
+        sendSensorDataToFirebase(lastValidFrequency, temperature);
+        monitorManualStatus();
+        // monitorUserOverride(); //Optionally: for adding user override feature
+        manageWaterHeaterLoad(lastValidFrequency); //stochastic algorithm
       }
+      // Delay for Wi-Fi stability
+      delay(5000);
+      Serial.println();
+    }
 }
 
 void writeToFile(const char* filename, float value) {
@@ -964,4 +1032,3 @@ void createFileWithHeader(const char* filename, const char* header) {
     }
   }
 }
-
