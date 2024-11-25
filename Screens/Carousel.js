@@ -1,3 +1,7 @@
+//file not used in project. 
+// this file was an older version of the tips screen that displayed different tips for the user
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import Swiper from 'react-native-deck-swiper';

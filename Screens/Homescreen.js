@@ -19,6 +19,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { Alert } from "react-native";
 
 const HomeScreen = () => {
+  // state variables 
   const { user, loading } = useUser();
   const { selectedDevice, setSelectedDevice, setDeviceInfo, deviceInfo, setName, name } = useDevice();
   const [open, setOpen] = useState(false);
@@ -27,12 +28,15 @@ const HomeScreen = () => {
   const [gridStatus, setGridStatus] = useState(null);
   const [devices, setDevices] = useState([]);
   const [gridAttachmentStatus, setGridAttachmentStatus] = useState(null);
+  const [scheduleStatus, setSchedStatus] = useState(null);
   const navigation = useNavigation();
 
+  // gathers user data from the data base
   useEffect(() => {
     if (user && user.uid) {
       const db = getDatabase();
       const devicesRef = ref(db, `users/${user.uid}/devices`);
+      
       const unsubscribe = onValue(devicesRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -48,7 +52,7 @@ const HomeScreen = () => {
       return () => unsubscribe();
     }
   }, [user]);
-
+  //grabs the selected devices information fromt he database
   useEffect(() => {
     if (selectedDevice) {
       const db = getDatabase();
@@ -56,7 +60,8 @@ const HomeScreen = () => {
       const gridStatusRef = ref(db, `controllers/${selectedDevice}/gridStatus`);
       const batteryRef = ref(db, `controllers/${selectedDevice}/battery`);
       const gridAttachmentRef = ref(db, `controllers/${selectedDevice}/gridAttachment`);
-      
+      const scheduleStatusRef = ref(db, `controllers/${selectedDevice}/scheduleStatus`);
+
       const unsubscribeStatus = onValue(statusRef, (snapshot) => {
         const status = snapshot.val();
         setControllerStatus(status);
@@ -65,6 +70,10 @@ const HomeScreen = () => {
       const unsubscribeGridStatus = onValue(gridStatusRef, (snapshot) => {
         const status = snapshot.val();
         setGridStatus(status);
+      });
+
+      const unsubscribeScheduleStatus = onValue(scheduleStatusRef, (snapshot) => {
+        setSchedStatus(snapshot.val());
       });
 
       const unsubscribeBattery = onValue(batteryRef, (snapshot) => setBatteryPercentage(snapshot.val()));
@@ -93,10 +102,12 @@ const HomeScreen = () => {
         unsubscribeGridStatus();
         unsubscribeBattery();
         unsubscribeGridAttachment();
+        unsubscribeScheduleStatus();
       };
     }
   }, [selectedDevice]);
 
+  //updates the status variable of the controller 
   const toggleController = () => {
     if (selectedDevice) {
       const db = getDatabase();
@@ -110,7 +121,7 @@ const HomeScreen = () => {
     }
   };
 
-
+  //deletes the device from the users devices array
   const deleteDevice = () => {
     if (!selectedDevice) {
       Alert.alert("Error", "Please select a device to delete.");
@@ -135,6 +146,7 @@ const HomeScreen = () => {
                 setSelectedDevice(null);
                 setDeviceInfo(null);
                 setName(null);
+                setControllerStatus(null)
                 Alert.alert("Success", "Device deleted successfully.");
               })
               .catch((error) => {
@@ -147,14 +159,18 @@ const HomeScreen = () => {
       ]
     );
   };
-
+  //controller status text
   const getControllerStatusText = () => {
     if (controllerStatus === null || gridStatus === null) {
       return "Unknown Status";
     }
     
+    if (scheduleStatus === true) {
+      return "Scheduled: OFF";
+    }
+    
     if (!controllerStatus) {
-      return "Standby: Controller is OFF";
+      return "Smart Water Heater is OFF";
     }
     
     if (controllerStatus && !gridStatus) {
@@ -162,12 +178,12 @@ const HomeScreen = () => {
     }
     
     if (controllerStatus && gridStatus) {
-      return "Controller is ON";
+      return "Smart Water Heater is ON";
     }
     
     return "Unknown Status";
   };
-
+  //changes color of status dot
   const getStatusColor = () => {
     if (controllerStatus === null || gridStatus === null) {
       return '#767577'; // Gray for unknown status
@@ -188,6 +204,7 @@ const HomeScreen = () => {
     return '#767577'; // Gray for unknown status
   };
 
+  //changes the battery to dynamically change its appearance depending on its percent
   const getBatteryIcon = () => {
     if (batteryPercentage >= 75) return "battery-full";
     if (batteryPercentage >= 50) return "battery-three-quarters";
@@ -195,14 +212,14 @@ const HomeScreen = () => {
     if (batteryPercentage > 0) return "battery-quarter";
     return "battery-empty";
   };
-
+  // yellow box that appears when the grid status variable is set to false
   const getGridStatusMessage = () => {
     if (gridStatus === false) {
       return "The water heater is temporarily turned off to solve frequency issues.";
     }
     return null;
   };
-
+  //loading icon while retreiving data
   if (loading) {
     return (
       <View style={styles.container}>
@@ -214,11 +231,12 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* user greeting  */}
         <View style={styles.header}>
           <Text style={styles.greeting}>Good afternoon,</Text>
           <Text style={styles.userName}>{user && user.displayName ? user.displayName : "User"}</Text>
         </View>
-
+        {/* select a device drop down  */}
         <View style={styles.devicesContainer}>
           <Text style={styles.sectionTitle}>Selected Device</Text>
           <DropDownPicker
@@ -228,17 +246,15 @@ const HomeScreen = () => {
             setOpen={setOpen}
             setValue={setSelectedDevice}
             onChangeValue={(value) => {
-              console.log("Selected value:", value);
+             // console.log("Selected value:", value);
               const selected = devices.find(device => device.value === value);
-              console.log("Selected device object:", selected);
+             // console.log("Selected device object:", selected);
 
               if (selected) {
-                console.log("Setting name to:", selected.label);
+               // console.log("Setting name to:", selected.label);
                 setName(selected.label);
                 setDeviceInfo(selected);
-              } else {
-                console.warn("No matching device found!");
-              }
+              } 
             }}
             placeholder={'Select a device'}
             containerStyle={[styles.dropdownContainer, open && styles.dropdownOpen]}
@@ -248,6 +264,8 @@ const HomeScreen = () => {
             textStyle={styles.dropdownText}
             placeholderStyle={styles.dropdownPlaceholder}
           />
+
+          {/* add and delet device btn */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("SetupOptions")}>
               <Ionicons name="add-circle-outline" size={24} color="#ffffff" />
@@ -261,7 +279,7 @@ const HomeScreen = () => {
             )}
           </View>
         </View>
-        
+        {/* if controler is selected we will display infromatiojn */}
         {controllerStatus !== null && (
           <View style={styles.statusContainer}>
             {getGridStatusMessage() && (

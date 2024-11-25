@@ -6,19 +6,21 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { getDatabase, ref, set, get, child } from 'firebase/database';
 
-
+// configure public google sign in key
+// this may need to be adjusted in future installments due to 
 GoogleSignin.configure({
   webClientId: '200839480102-hddu4k4btp65or4fkfmmfki0snteu69m.apps.googleusercontent.com',
   offlineAccess: true,
 });
 
 export default function Login( { navigation }) {
-
+// update state variable
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { user, setUser } = useUser(); 
   const [error, setError] = useState('');
 
+//  function used to handle signing in with google
   const signInWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
@@ -30,7 +32,7 @@ export default function Login( { navigation }) {
       const db = getDatabase();
       const userRef = ref(db, 'users/' + user.uid);
       const snapshot = await get(userRef);
-      
+      //if the user does not exist in the database we will create the user
       if (snapshot.exists()) {
         const userData = snapshot.val();
         setUser({
@@ -46,7 +48,7 @@ export default function Login( { navigation }) {
           email: user.email,
           zip: "32837"
         });
-  
+        // set the user context variable
         setUser({
           uid: user.uid,
           displayName: user.displayName || 'Unknown User',
@@ -61,7 +63,7 @@ export default function Login( { navigation }) {
   };
   
   
-
+  //handle login
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -89,6 +91,7 @@ export default function Login( { navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* standard login  */}
       <Text style={styles.title}>Login</Text>
       <View style={styles.formContainer}>
         <Text style={styles.subtitle}>Enter your email and password</Text>
@@ -105,7 +108,7 @@ export default function Login( { navigation }) {
           <View style={styles.line} />
         </View>
         <TouchableOpacity style={styles.googleButton } onPress={signInWithGoogle} >
-        
+        {/* login with google btn */}
           <Text style={styles.googleButtonText}>Google</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.buttonForgot}  onPress={() => navigation.navigate('ForgotPassword')}>
@@ -115,7 +118,7 @@ export default function Login( { navigation }) {
     </View>
   );
 }
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

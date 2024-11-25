@@ -3,8 +3,11 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import firebase from '../context/firebaseConfig';
 
 const UserContext = createContext();
-
+//user context file
+//used for accessing user infromation across multiple components
 export const AuthenticationContext = ({ children }) => {
+
+  //declare user context state variables
     const auth = getAuth(firebase);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(null);
@@ -18,6 +21,7 @@ export const AuthenticationContext = ({ children }) => {
     return () => unsub();
   }, [auth]);
 
+  //export context variables used in other files
   return (
     <UserContext.Provider value={{ user, loading, setUser }}>
       {children}

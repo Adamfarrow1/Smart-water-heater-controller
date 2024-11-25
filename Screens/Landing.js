@@ -5,6 +5,7 @@ import home_bg from '../assets/home_bg.jpg';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
 const LandingPage = ({ navigation }) => {
+  //landing page displaying the login and register btns
   return (
     <View style={styles.container}>
       <ImageBackground source={home_bg} resizeMode="cover" style={styles.image}>
@@ -28,7 +29,7 @@ const LandingPage = ({ navigation }) => {
     </View>
   );
 }
-
+// styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -11,6 +11,7 @@ import Schedule from './Schedule';
 const Tab = createBottomTabNavigator();
 
 function Home() {
+    //navigator used to display the bottom tab (energy saved tab, temp control tab etc.)
     return (
         <Tab.Navigator 
             initialRouteName="Your Devices home"

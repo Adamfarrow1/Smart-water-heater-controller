@@ -7,10 +7,13 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 
 function TempControl() {
+
+  //declare state variables
   const { selectedDevice, deviceInfo,setName, name } = useDevice();
   const [currentTemp, setCurrentTemp] = useState(120);
   const [setTemp, setSetTemp] = useState(120);
 
+  // when page is rendered we will pull the temperature data from the database
   useFocusEffect(
     useCallback(() => {
       if (!selectedDevice) return;
@@ -33,6 +36,7 @@ function TempControl() {
     }, [selectedDevice])
   );
 
+  // when the temperature is changed we will update the database
   function changeTemp() {
     if (!selectedDevice) return;
     if (setTemp === currentTemp) return;
@@ -49,6 +53,7 @@ function TempControl() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* header information */}
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.deviceInfo}>
@@ -58,15 +63,13 @@ function TempControl() {
             </Text>
           </View>
         </View>
-
+        {/* temperature slider and set temp button */}
         <View style={styles.mainContent}>
           <View style={styles.tempInfo}>
             <Text style={styles.label}>Current Temperature</Text>
             <Text style={styles.temperature}>{currentTemp}°F</Text>
           </View>
-
           <RadialVariant speed={setTemp} setSpeed={setSetTemp} />
-
           <TouchableOpacity style={styles.button} onPress={changeTemp}>
             <Text style={styles.buttonText}>Set Temperature</Text>
           </TouchableOpacity>
@@ -75,7 +78,7 @@ function TempControl() {
     </SafeAreaView>
   );
 }
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

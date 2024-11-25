@@ -7,6 +7,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 function AllFrequencies() {
+
+  //declare state variables
   const [frequencies, setFrequencies] = useState([]);
   const [displayedFrequencies, setDisplayedFrequencies] = useState([]);
   const [sortOrder, setSortOrder] = useState('desc');
@@ -35,6 +37,8 @@ function AllFrequencies() {
   const showEndTimePicker = () => setEndTimePickerVisibility(true);
   const hideEndTimePicker = () => setEndTimePickerVisibility(false);
 
+
+  // handle query preferences
   const handleConfirmFromDate = (date) => {
     hideFromDatePicker();
     setFromDate(date);
@@ -59,6 +63,10 @@ function AllFrequencies() {
     fetchFrequencies(fromDate, toDate, new Date(startTime), time, showingAnomalous);
   };
 
+
+
+
+  //remove duplicates
   const removeDuplicates = (data) => {
     const uniqueData = [];
     const seenTimestamps = new Set();
@@ -73,12 +81,17 @@ function AllFrequencies() {
     return uniqueData;
   };
 
+
+
+  //formatting date time query
   const formatDateTimeForQuery = (date, time) => {
     const d = new Date(date);
     d.setHours(time.getHours(), time.getMinutes(), time.getSeconds());
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
   };
 
+
+  //fetching frequencies from the db
   const fetchFrequencies = useCallback((from = fromDate, to = toDate, start = new Date(startTime), end = new Date(endTime), anomalous = showingAnomalous) => {
     if (!selectedDevice) return;
     setIsLoading(true);
@@ -125,6 +138,8 @@ function AllFrequencies() {
       });
   }, [selectedDevice, sortOrder, fromDate, toDate, startTime, endTime, showingAnomalous]);
 
+
+  //update which frequencies are displayed
   const updateDisplayedFrequencies = (allFrequencies, page) => {
     const endIndex = page * ITEMS_PER_PAGE;
     setDisplayedFrequencies(allFrequencies.slice(0, endIndex));
@@ -134,6 +149,8 @@ function AllFrequencies() {
     fetchFrequencies();
   }, [selectedDevice, sortOrder, fromDate, toDate, startTime, endTime, showingAnomalous]);
 
+
+  //sort the frequencies in ascneding or descending order
   const sortFrequencies = (data, order) => {
     return data.sort((a, b) => {
       return order === 'asc'
@@ -142,6 +159,8 @@ function AllFrequencies() {
     });
   };
 
+
+  //handles ascending or descending button press
   const handleSortToggle = () => {
     const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
     setSortOrder(newSortOrder);
@@ -151,12 +170,16 @@ function AllFrequencies() {
     updateDisplayedFrequencies(sortedFrequencies, 1);
   };
 
+
+  //scroll to top of list when changing between ascending or descending
   const scrollToTop = () => {
     if (scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
     }
   };
 
+
+  //only show non 60 data
   const filterAnomalous = () => {
     const newShowingAnomalous = !showingAnomalous;
     setShowingAnomalous(newShowingAnomalous);
@@ -164,34 +187,36 @@ function AllFrequencies() {
     scrollToTop();
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      if (!selectedDevice) return;
-      const db = getDatabase();
-      const intervalId = setInterval(() => {
-        const newFrequency = generateFrequency();
-        const dateTimeKey = formatDateKey();
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (!selectedDevice) return;
+  //     const db = getDatabase();
+  //     const intervalId = setInterval(() => {
+  //       const newFrequency = generateFrequency();
+  //       const dateTimeKey = formatDateKey();
   
-        set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
-          .then(() => console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`))
-          .catch(error => console.error("Error uploading frequency:", error));
-      }, 3000);
+  //       set(ref(db, `controllers/${selectedDevice}/frequency/${dateTimeKey}`), newFrequency)
+  //         .then(() => console.log(`Uploaded frequency: ${newFrequency} at ${dateTimeKey}`))
+  //         .catch(error => console.error("Error uploading frequency:", error));
+  //     }, 3000);
   
-      return () => clearInterval(intervalId);
-    }, [selectedDevice])
-  );
+  //     return () => clearInterval(intervalId);
+  //   }, [selectedDevice])
+  // );
 
-  const generateFrequency = () => {
-    const random = Math.random();
-    if (random < 0.8) return 60;
-    return Math.random() < 0.5 ? 59 : 61;
-  };
+  // const generateFrequency = () => {
+  //   const random = Math.random();
+  //   if (random < 0.8) return 60;
+  //   return Math.random() < 0.5 ? 59 : 61;
+  // };
 
-  const formatDateKey = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  };
+  // const formatDateKey = () => {
+  //   const now = new Date();
+  //   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  // };
 
+
+  //each item from the list
   const renderFrequencyItem = (item) => (
     <View key={item.timestamp} style={styles.frequencyItem}>
       <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -199,6 +224,7 @@ function AllFrequencies() {
     </View>
   );
 
+  //load more btn that is shown for lazy loading
   const loadMore = () => {
     if (displayedFrequencies.length < frequencies.length) {
       const nextPage = currentPage + 1;
@@ -207,15 +233,19 @@ function AllFrequencies() {
     }
   };
 
+
+
   return (
+
     <SafeAreaView style={styles.container}>
+    {/* header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>All Frequencies</Text>
         <TouchableOpacity onPress={() => fetchFrequencies()} style={styles.refreshButton}>
           <Feather name="refresh-cw" size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
-
+    {/* ascending and descending btn */}
       <View style={styles.filterContainer}>
         <TouchableOpacity onPress={handleSortToggle} style={styles.sortButton}>
           <Feather name={sortOrder === 'asc' ? 'arrow-up' : 'arrow-down'} size={20} color="#ffffff" />
@@ -223,6 +253,8 @@ function AllFrequencies() {
         </TouchableOpacity>
       </View>
 
+
+      {/* to an from date and time  */}
       <View style={styles.dateRangeContainer}>
         <TouchableOpacity onPress={showFromDatePicker} style={styles.dateButton}>
           <Feather name="calendar" size={20} color="#ffffff" />
@@ -279,6 +311,8 @@ function AllFrequencies() {
         themeVariant="light"
       />
 
+      {/* anomolous data btn */}
+
       <View style={styles.filterContainer}>
         <TouchableOpacity onPress={filterAnomalous} style={styles.filterButton}>
           <Feather name="filter" size={20} color="#ffffff" />
@@ -287,7 +321,7 @@ function AllFrequencies() {
           </Text>
         </TouchableOpacity>
       </View>
-
+      {/* scroll view for viewing the list */}
       <ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
@@ -316,6 +350,7 @@ function AllFrequencies() {
   );
 }
 
+// styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

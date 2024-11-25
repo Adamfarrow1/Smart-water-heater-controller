@@ -4,7 +4,7 @@ import {auth,  createUserWithEmailAndPassword } from '../context/firebaseConfig'
 import { getDatabase, ref, set } from "firebase/database";
 import { updateProfile } from "firebase/auth";
 export default function Register({ navigation }) {
-
+  // declare state variables
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
@@ -12,16 +12,18 @@ export default function Register({ navigation }) {
   const [zip, setZip] = useState('');
   const [error, setError] = useState('');
 
+  // handle registering a user
   const handleRegister = async () => {
     setError('');
     if (password !== repassword) {
       setError("Passwords do not match");
       return;
     }
+    //use firebase function to register a user
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user; 
-
+      // update the user profile and add the user to the users collection in the db
       await updateProfile(user, {
         displayName: name,         
       });
@@ -48,7 +50,7 @@ export default function Register({ navigation }) {
     }
   };
 
-
+  // input boxes for information
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Register</Text>
@@ -68,7 +70,7 @@ export default function Register({ navigation }) {
     </View>
   );
 }
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

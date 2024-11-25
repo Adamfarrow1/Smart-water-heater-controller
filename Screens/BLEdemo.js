@@ -22,6 +22,8 @@ import { useNavigation } from '@react-navigation/native';
 
 
 const BLEdemo = () => {
+
+  //declaring state variables
   const { user, loading } = useUser();
   const [devices, setDevices] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -36,6 +38,7 @@ const BLEdemo = () => {
 
 
 
+  //scanning for devices function
   const scanForDevices = async () => {
     try {
       setIsScanning(true);
@@ -58,14 +61,18 @@ const BLEdemo = () => {
     }
   };
 
+
+  //connecting to the device
   const connectToDevice = async () => {
     if (!selectedDevice) return;
 
     try {
       setIsWifiLoading(true); // Show Wi-Fi loading
+
+      //security: must match with the esp32
       await selectedDevice.connect("abcd1234");
 
-
+      
       await selectedDevice.provision(ssid, password);
       Alert.alert('Success', 'Wi-Fi credentials sent successfully!');
       setIsWifiLoading(false); // Hide Wi-Fi loading
@@ -81,7 +88,7 @@ const BLEdemo = () => {
     }
   };
 
-
+//sending the UID to the ESP32
   const sendUIDToESP32 = async (uid) => {
     const data = { uid: uid };
     try {
@@ -113,13 +120,15 @@ const BLEdemo = () => {
     }
 };
 
-  
+  //show the wifi modal
   const showWifiDialog = (device) => {
     setSelectedDevice(device);
     setModalVisible(true);
   };
   return (
     <SafeAreaView style={styles.container}>
+
+      {/* flatlist displaying the devices found */}
       <FlatList
         ListHeaderComponent={
           <>
@@ -147,7 +156,7 @@ const BLEdemo = () => {
           </>
         }
         data={devices}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item.id || index.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.deviceItem}
@@ -164,7 +173,7 @@ const BLEdemo = () => {
         )}
         contentContainerStyle={styles.flatListContent}
       />
-
+ {/* modal displaying the loading indicator and entering wifi credentials  */}
 <Modal
   animationType="fade"
   transparent={true}

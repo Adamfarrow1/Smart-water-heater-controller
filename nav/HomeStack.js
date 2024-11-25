@@ -14,6 +14,7 @@ import { useDevice } from '../context/DeviceContext';
 const Stack = createStackNavigator();
 
 function HomeStack({ navigation }) {
+  //home screen stack navigator used for drawer on homescreen
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -51,6 +52,7 @@ function HomeStack({ navigation }) {
 const Drawer = createDrawerNavigator();
 
 function CustomDrawerContent(props) {
+  //custom content for logout used in drawer
   const {setDeviceInfo , setSelectedDevice } = useDevice();
   const handleLogout = async () => {
     try {
@@ -77,7 +79,9 @@ function CustomDrawerContent(props) {
 
 
 function DrawerNavigator() {
+  // drawer navigator declaration
   return (
+    // declare custom drawer content
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
@@ -102,7 +106,7 @@ function DrawerNavigator() {
     </Drawer.Navigator>
   );
 }
-
+//styles
 const styles = StyleSheet.create({
   logoutButton: {
     padding: 15,

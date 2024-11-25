@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-
+//mock notifications
 const mockNotifications = [
   { id: '1', title: 'Restarting Water Heater', message: 'Your water heater has been automatically restarted to preserve the integrity of the grid.', time: '2 hours ago'},
   { id: '2', title: 'Water Heater controller connection lost', message: 'Your water heater has lost connection to the network.', time: '1 day ago'},
@@ -10,9 +10,12 @@ const mockNotifications = [
 ];
 
 const Notifications = () => {
+  // declaring state variables
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // remove this useEffect in production 
+  //only used to simulate loading times
   useEffect(() => {
 
     setTimeout(() => {
@@ -20,7 +23,7 @@ const Notifications = () => {
       setLoading(false);
     }, 1000);
   }, []);
-
+  //each individual notification item is rendered as follows
   const renderNotification = ({ item }) => (
     <TouchableOpacity style={[styles.notificationItem, item.read ? styles.readNotification : styles.unreadNotification]}>
       <View style={styles.notificationContent}>
@@ -32,7 +35,7 @@ const Notifications = () => {
       </View>
     </TouchableOpacity>
   );
-
+  // if the list is empty display that there are no notifications
   const renderEmptyList = () => (
     <View style={styles.emptyListContainer}>
       <Feather name="bell-off" size={50} color="#bdc3c7" />
@@ -42,11 +45,13 @@ const Notifications = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* if we are loading display loading icon  */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3498db" />
         </View>
       ) : (
+        // if we are not loading display the notifications 
         <FlatList
           data={notifications}
           renderItem={renderNotification}
@@ -58,7 +63,7 @@ const Notifications = () => {
     </SafeAreaView>
   );
 };
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

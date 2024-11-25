@@ -16,7 +16,7 @@ import SetupOptions from './Screens/DeviceSetup/SetupOptions.js';
 import DeviceInfo from './Screens/DeviceSetup/DeviceInfo.js';
 import AllFrequencies from './Screens/Allfrequencies.js';
 const Stack = createNativeStackNavigator();
-
+  // entry for application includes navigator for different screens
 const App = () => {
   return (
     

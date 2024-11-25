@@ -3,6 +3,8 @@ import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+//firebase config file
 const firebaseConfig = {
     apiKey: "AIzaSyCw_bUWIBcoZ42BKCAScJOfO2q2KyThJ9U",
     authDomain: "git-wh.firebaseapp.com",

@@ -4,8 +4,11 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../context/firebaseConfig';
 
 const Forgotpassword = () => {
+  //state variable
   const [email, setEmail] = useState('');
 
+
+  //handles reseting password
   const handlePasswordReset = () => {
     if (email) {
       sendPasswordResetEmail(auth, email)
@@ -26,6 +29,8 @@ const Forgotpassword = () => {
   };
 
   return (
+
+    //dispalys forgot password btn
     <View style={styles.container}>
       <Text style={styles.title}>Forgot Password?</Text>
       <TextInput
@@ -44,7 +49,7 @@ const Forgotpassword = () => {
     </View>
   );
 };
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

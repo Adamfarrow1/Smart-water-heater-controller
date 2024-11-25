@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createStackNavigator();
 
+//instruction screen navigator
 const InstructionScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
@@ -26,7 +27,7 @@ const InstructionScreen = ({ navigation }) => {
         </View>
     );
 };
-
+//scan screen navigator
 const ScanScreen = ({ navigation, devices, isScanning, scanForDevices }) => {
     return (
         <View style={styles.container}>
@@ -49,6 +50,7 @@ const ScanScreen = ({ navigation, devices, isScanning, scanForDevices }) => {
         </View>
     );
 };
+//BLE screen navigator
 const BLEsetupStack = ({ closeModal }) => {
     return (
         <NavigationContainer independent={true}>
@@ -70,7 +72,7 @@ const BLEsetupStack = ({ closeModal }) => {
         </NavigationContainer>
     );
 };
-
+//styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,

@@ -6,28 +6,32 @@ import { useNavigation } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 
 const DeviceInfo = ({ route }) => {
+    //state variables
     const { deviceId } = route.params;
     const { user } = useUser();
     const [deviceName, setDeviceName] = useState('');
     const [zipCode, setZipCode] = useState('');
     const navigation = useNavigation();
-
+    // handles submit and updates the device infromation in the DB
     const handleSubmit = () => {
         if (!deviceName.trim() || !zipCode.trim()) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
-
+        
         const db = getDatabase();
         const userId = user.uid;
         const deviceRef = ref(db, `users/${userId}/devices/${deviceId}`);
+
+
 
         const deviceData = {
             name: deviceName,
             zipCode: zipCode,
         };
 
-        set(deviceRef, deviceData)
+
+            set(deviceRef, deviceData)
             .then(() => {
                 Alert.alert('Success', 'Device information saved successfully!');
                 navigation.navigate('Home');
@@ -40,10 +44,12 @@ const DeviceInfo = ({ route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
+            
             <KeyboardAvoidingView 
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.keyboardAvoidingView}
             >
+                {/* text inputs fro the device information */}
                 <View style={styles.content}>
                     <Text style={styles.title}>Enter Device Information</Text>
                     <View style={styles.inputContainer}>
@@ -75,7 +81,7 @@ const DeviceInfo = ({ route }) => {
         </SafeAreaView>
     );
 };
-
+//styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,

@@ -10,7 +10,7 @@ function EnergySaved() {
   const [data, setData] = useState([59, 60, 60, 60, 60, 61, 60, 60, 60 ,61]);
   const { selectedDevice, deviceInfo, setName, name } = useDevice();
   const navigation = useNavigation();
-
+  // websocket to check the frequencies for updates
   useFocusEffect(
     useCallback(() => {
       if (!selectedDevice) return;
@@ -72,6 +72,8 @@ function EnergySaved() {
   //   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
   // };
 
+
+  // structure of each of the tip cards
   const TipCard = ({ icon, text, onPress }) => (
     <TouchableOpacity onPress={onPress} style={styles.tipRow}>
       <Feather name={icon} size={20} color="#60a5fa" style={styles.tipIcon} />
@@ -98,7 +100,7 @@ function EnergySaved() {
           onPress={() => navigation.navigate('AllFrequencies')}
         />
 
-        
+          {/* graph displaying the frequencies  */}
           <Text style={styles.cardTitle}>Frequency Monitoring</Text>
           <LineChart
             data={{
@@ -120,7 +122,7 @@ function EnergySaved() {
             style={styles.chart}
           />
 
-      
+            {/* tip cards */}
           <Text style={styles.cardTitle}>Energy Saving Tips</Text>
           <View style={styles.tipsContainer}>
             <TipCard
@@ -138,21 +140,72 @@ function EnergySaved() {
   );
 }
 
+//styles
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#1b252d", paddingHorizontal: 20 },
-  scrollContent: { padding: 20 },
-  header: { marginBottom: 20 },
-  deviceInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  icon: { marginRight: 10 },
-  deviceName: { color: "#ffffff", fontSize: 18, fontWeight: '600' },
-  headerSubtitle: { fontSize: 16, color: '#94a3b8' },
-  card: { backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 12, padding: 16, marginBottom: 24 },
-  cardTitle: { fontSize: 18, fontWeight: '600', color: '#ffffff', marginBottom: 16 },
-  chart: { marginVertical: 8, borderRadius: 16 },
-  tipsContainer: { gap: 16 },
-  tipRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, backgroundColor: 'rgba(40, 68, 104, 0.4)', borderRadius: 8, paddingHorizontal: 12, marginBottom: 10 },
-  tipIcon: { marginRight: 10 },
-  tipText: { fontSize: 16, color: '#e2e8f0', fontWeight: '600' },
+  container: {   
+  flex: 1,
+  backgroundColor: "#1b252d",
+  paddingHorizontal: 20 
+},
+  scrollContent: { 
+    padding: 20 
+  },
+  header: { 
+    marginBottom: 20 
+  },
+  deviceInfo: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 8 
+  },
+  icon: { 
+    marginRight: 10 
+  },
+  deviceName: { 
+    color: "#ffffff", 
+    fontSize: 18, 
+    fontWeight: '600' 
+  },
+  headerSubtitle: { 
+    fontSize: 16, 
+    color: '#94a3b8'
+   },
+  card: { 
+    backgroundColor: 'rgba(40, 68, 104, 0.4)', 
+    borderRadius: 12, 
+    padding: 16, 
+    marginBottom: 24 
+  },
+  cardTitle: {
+     fontSize: 18, 
+     fontWeight: '600', 
+     color: '#ffffff', 
+     marginBottom: 16 
+    },
+  chart: { 
+    marginVertical: 8,
+     borderRadius: 16 
+    },
+  tipsContainer: { 
+    gap: 16 
+  },
+  tipRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 10, 
+    backgroundColor: 'rgba(40, 68, 104, 0.4)', 
+    borderRadius: 8, 
+    paddingHorizontal: 12,
+    marginBottom: 10 
+  },
+  tipIcon: { 
+    marginRight: 10 
+  },
+  tipText: { 
+    fontSize: 16, 
+    color: '#e2e8f0', 
+    fontWeight: '600' 
+  },
 });
 
 export default EnergySaved;

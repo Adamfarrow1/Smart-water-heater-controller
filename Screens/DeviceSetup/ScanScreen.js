@@ -6,7 +6,7 @@ import {
   ESPTransport,
   ESPSecurity,
 } from '@orbital-systems/react-native-esp-idf-provisioning';
-
+ // delete this file
 const ScanScreen = () => {
 
     const [devices, setDevices] = useState([]);

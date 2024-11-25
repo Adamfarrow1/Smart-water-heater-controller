@@ -4,6 +4,7 @@ import Notifications from '../Screens/Notifications';
 
 const Stack = createStackNavigator();
 
+//notifications stack
 function NotificationStack() {
     return (
         <Stack.Navigator>

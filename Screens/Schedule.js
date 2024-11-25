@@ -8,11 +8,10 @@ import { getDatabase, ref, onValue, update, push, set, off, remove } from "fireb
 import { useDevice } from '../context/DeviceContext';
 
 const currentDate = new Date().toISOString().split('T')[0];
-const work = { key: 'work', color: 'red', selectedDotColor: 'blue' };
-const massage = { key: 'massage', color: 'white', selectedDotColor: 'white' };
-const workout = { key: 'workout', color: 'green' };
 
 function Schedule() {
+
+  //declare usestate 
   const navigation = useNavigation();
   const { selectedDevice } = useDevice(); 
   const [selectedDay, setSelectedDay] = useState(currentDate);
@@ -27,7 +26,7 @@ function Schedule() {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState("");
 
-
+  // displays the add button in the top right corner
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -38,6 +37,7 @@ function Schedule() {
     });
   }, [navigation]);
 
+  // grabs the scheduling information from the database
   useEffect(() => {
     if (!selectedDevice) return;
     const db = getDatabase();
@@ -72,10 +72,8 @@ function Schedule() {
     };
   }, [selectedDevice, selectedDay]);
 
-  const onDayPress = () => {
-    setIsDeleteModalVisible(true);
-  };
 
+  // addes a new even to the database in the scheduling array
   const addNewEvent = () => {
     if (!selectedDevice) return;
     if (newEventName.trim()) {
@@ -101,6 +99,8 @@ function Schedule() {
     }
   };
 
+
+  //deletes the selected scheduled time from the database
   const deleteSchedule = () => {
     if (!selectedDevice || !selectedEventId) return;
     const db = getDatabase();
@@ -124,13 +124,13 @@ function Schedule() {
       });
   };
   
-
+// when the item is pressed we will set the selected item variables and open the delete modal
   const handleItemPress = (item) => {
     setSelectedEventId(item.id);
     setSelectedEvent(item.name)
     setIsDeleteModalVisible(true);
   };
-  
+  // how each item is rendered
   const renderItem = (item) => (
     <TouchableOpacity style={styles.item} onPress={() => handleItemPress(item)}>
       <Text style={styles.itemText}>{item.name}</Text>
@@ -140,7 +140,7 @@ function Schedule() {
     </TouchableOpacity>
   );
   
-
+//whenever the dataset is empty it displays this
   const renderEmptyData = () => (
     <View style={styles.emptyItem}>
       <Text style={styles.emptyItemText}>No scheduled tasks found</Text>
@@ -150,12 +150,10 @@ function Schedule() {
   return (
     <View style={styles.container}>
       { items ? 
+      //if there are items we will display the agenda
       <Agenda
         items={items}
         onDayPress={(day) => setSelectedDay(day.dateString)}
-        markedDates={{
-          [selectedDay]: { selected: true, marked: true, dots: [work, massage, workout] },
-        }}
         renderItem={renderItem}
         renderEmptyData={renderEmptyData}
         theme={{
@@ -183,6 +181,7 @@ function Schedule() {
         style={{}}
       /> : null
       }
+      {/* add event modal */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -238,7 +237,7 @@ function Schedule() {
           </View>
         </View>
       </Modal>
-
+              {/* delete modal */}
       <Modal
         transparent={true}
         animationType="slide"
@@ -263,7 +262,7 @@ function Schedule() {
     </View>
   );
 }
-
+//delete 
 const styles = StyleSheet.create({
   container: {
     flex: 1,

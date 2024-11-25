@@ -31,7 +31,7 @@ const AddDevice = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const navigation = useNavigation(); 
     const [isSettingUp, setIsSettingUp] = useState(false); // Loading state for setup completion
-
+    // scans for nearby devices
     const scanForDevices = async () => {
       try {
         setIsScanning(true);
@@ -57,11 +57,8 @@ const AddDevice = () => {
         setIsScanning(false);
       }
       };
-
+      // connect avaiable devices
     const connectToDevice = async () => {
-   // if (!selectedDevice) return;
-
-     // await selectedDevice.disconnect();
      setIsSettingUp(true); // Show setup loading
       const uid = user?.uid;
       await sendUIDToESP32(uid);
@@ -73,7 +70,7 @@ const AddDevice = () => {
     };
   
   
-
+    // sends the credentials to the ESP32
       const sendUIDToESP32 = async (uid) => {
         const data = { uid: uid };
         try {
@@ -100,16 +97,12 @@ const AddDevice = () => {
             console.error("Error sending UID to ESP32:", error);
         }
     };
-
-    const showWifiDialog = (device) => {
-        setSelectedDevice(device);
-        setModalVisible(true);
-      };
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
         ListHeaderComponent={
           <>
+          {/* add device header and scan btn */}
             <View style={styles.header}>
               <Text style={styles.title}>Add a New Device</Text>
               <Text style={styles.subtitle}>Scan and connect to nearby ESP32 devices</Text>
@@ -133,6 +126,7 @@ const AddDevice = () => {
             </TouchableOpacity>
           </>
         }
+        // displays items found
         data={devices}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -152,7 +146,7 @@ const AddDevice = () => {
         )}
         contentContainerStyle={styles.flatListContent}
       />
-
+      {/* connecting to device modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -194,7 +188,7 @@ const AddDevice = () => {
     </SafeAreaView>
   );
 };
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

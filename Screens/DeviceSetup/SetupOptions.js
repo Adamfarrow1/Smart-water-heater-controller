@@ -13,7 +13,7 @@ const SetupOptions = () => {
                     <Text style={styles.title}>Choose Setup Option</Text>
                     <Text style={styles.subtitle}>Select how you'd like to set up your device</Text>
                 </View>
-
+                {/*  choose between adding new ESP32 or adding an existing one */}
                 <View style={styles.optionsContainer}>
                     <TouchableOpacity 
                         style={styles.optionButton} 
@@ -47,7 +47,7 @@ const SetupOptions = () => {
         </SafeAreaView>
     );
 };
-
+//styles
 const styles = StyleSheet.create({
     container: {
         flex: 1,

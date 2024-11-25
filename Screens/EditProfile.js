@@ -17,6 +17,8 @@ import { sendPasswordResetEmail, getAuth, updateProfile } from "firebase/auth";
 import { Feather } from '@expo/vector-icons';
 
 const EditProfile = () => {
+
+  //displaying state variables
   const { user, loading, setUser } = useUser();
   const [retrievedData, setRetrievedData] = useState({
     name: '',
@@ -27,12 +29,13 @@ const EditProfile = () => {
   const [zip, setZip] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
 
+ 
   useEffect(() => {
     if (!user || !user.uid) return;
 
     const db = getDatabase();
     const deviceRef = ref(db, 'users/' + user.uid);
-
+    // checks the database for changes within the users profile. this will run on first render of the componenet allowing to access the users information
     onValue(deviceRef, (snapshot) => {
       const data = snapshot.val();
       setRetrievedData({
@@ -42,14 +45,14 @@ const EditProfile = () => {
       setName(user.displayName || '');
       setZip(data?.zip || '');
     });
-
+    //fade in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: true,
     }).start();
   }, [user, fadeAnim]);
-
+  //handles the resetting of password for the user
   const handlePasswordReset = () => {
     const auth = getAuth();
     if (user && user.email) {
@@ -65,7 +68,7 @@ const EditProfile = () => {
       Alert.alert('Error', 'Email address not found');
     }
   };
-
+  //handles saving the user information to the RTDB
   const handleSave = async () => {
     if (!user || !user.uid) return;
 
@@ -88,6 +91,7 @@ const EditProfile = () => {
     }
   };
 
+  //if no user infromation is found we will display this 
   if (!user) {
     return (
       <View style={styles.container}>
@@ -95,6 +99,7 @@ const EditProfile = () => {
       </View>
     );
   }
+
 
   return (
     <KeyboardAvoidingView 
@@ -104,7 +109,7 @@ const EditProfile = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           
-          
+          {/* displays user infromation  */}
           <View style={styles.userInfoContainer}>
             <Feather name="user" size={24} color="#ffffff" style={styles.icon} />
             <Text style={styles.userInfoText}>{user.displayName || "No Name Available"}</Text>
@@ -116,6 +121,8 @@ const EditProfile = () => {
             )}
           </View>
 
+
+            {/* text inputs for the user */}
           <View style={styles.inputContainer}>
             <Feather name="edit-2" size={20} color="#6E7F87" style={styles.inputIcon} />
             <TextInput
@@ -138,7 +145,7 @@ const EditProfile = () => {
               placeholderTextColor="#aaa"
             />
           </View>
-
+            {/* save changes and reset password btn */}
           <TouchableOpacity style={styles.button} onPress={handleSave}>
             <Feather name="save" size={20} color="#ffffff" style={styles.buttonIcon} />
             <Text style={styles.buttonText}>Save Changes</Text>
@@ -153,7 +160,7 @@ const EditProfile = () => {
     </KeyboardAvoidingView>
   );
 };
-
+//styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
