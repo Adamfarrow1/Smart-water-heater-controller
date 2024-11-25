@@ -9,7 +9,7 @@ This project involves the development of a Smart Water Heater Controller using E
 - Node.js installed
 - Expo CLI installed globally: "npm install -g expo-cli"
 
-**VScode**:
+**VScode:**
 - run "npm install" inside the terminal to install node_modules
 - run "npm start" or "npx expo start" to begin developement server
 - Now use the "expo go" app to scan the QR code that is provided
@@ -59,7 +59,6 @@ In the case where the esp32 is already connected to wifi, SimpleBLE was used to 
 
 **REST API:**
 An alternative to a user adding an existing device to their account would be sending the user’s UID over the wifi network. If the mobile app and esp32 are connected to the same network, we can send the user’s uid to the esp32 and the esp32 will update the realtime database accordingly. 
-
 
 **Stochastic Algorithm Filter**
 The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
