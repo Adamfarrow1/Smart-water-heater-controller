@@ -17,7 +17,6 @@ This project involves the development of a Smart Water Heater Controller using E
 
 
 
-
 # Developing using a MacOS:
 
 **VScode:**
@@ -44,23 +43,38 @@ In order for the app to run on an iPhone with no active metro server running on 
 - On Xcode, select your connected device and run the app.
 
 # Running the ESP32:
-The ESP32 is using WifiProv.H library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
+**WifiProv:**
+Library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
 ](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
 per the github link above, WifiProv.beginprovision includes a bool variable reset_provisioned: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected Wi-Fi and therefore cannot be found.
 If set to false, the esp32 will attempt to reconnect to the last saved wifi network. Once the esp32 reconnects to the wifi, it connects to the firebase with the last saved deviceId and continues to update the realtime database. This was mainly used to ensure that even if the esp32 has been shut off or lost connection, it will attempt to reconnect to the  same wifi. 
 
 If set to true, the esp32 will ask for provisioning credientials every time it is powered on. A new deviceId will also be generated. This was mainly used to simulate a situation where different devices are being added and need to be connected to wifi for the first time. 
 
-Firebase ESP Client:
+**Firebase ESP Client:**
 Use this link for more information about this library: https://github.com/rolan37/Firebase-ESP-Client-main
 
-SimpleBLE
-SimpleBLE was intially used, in the case where the esp32 is already connected to wifi., to promote a BLE signal to the mobile app so that it’s disoverable by the mobile app. If this signal was being broadcast, that meant that the mobile app can sends the new user UID throught a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
+**SimpleBLE:**
+In the case where the esp32 is already connected to wifi, SimpleBLE was used to broadcast a BLE signal to be disoverable by the our mobile app. If this signal was being broadcast, that meant that the mobile app can send the new user UID through a POST request. After some research, we did find that broadcasting a BLE signal continuously can take up a lot of memory and space. Therefore, we provided an alternative.
 
-REST API
+**REST API:**
 An alternative to a user adding an existing device to their account would be sending the user’s UID over the wifi network. If the mobile app and esp32 are connected to the same network, we can send the user’s uid to the esp32 and the esp32 will update the realtime database accordingly. 
 
 
+**Stochastic Algorithm Filter**
+The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
+    This function manages the water heater's load by considering:
+    - The current grid frequency (ft).
+    - Randomness to make decisions probabilistically.
+    - The state of the water heater and external factors like scheduled off periods.
+The function controlWaterHeater executes the decision made by manageWaterHeaterLoad by:
+    - Turning the heater on or off.
+    - Updating the Firebase Realtime Database (RTDB) with the current status.
 
-
-  
+Note: This sketch takes up a lot of space for the app and may not be able to flash with default setting on some chips.
+  If you see Error like this: "Sketch too big"
+  In Arduino IDE go to: Tools > Partition scheme > chose anything that has more than 1.4MB APP
+   - for example "No OTA (2MB APP/2MB SPIFFS)"
+   - Tools > Flash mode > to QIO
+   - Tools > Partition scheme > Huge APP
+     
