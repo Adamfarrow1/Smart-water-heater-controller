@@ -43,7 +43,7 @@ In order for the app to run on an iPhone with no active metro server running on 
   -  Build phases -> Bundle React Native code and images -> Check off "For install builds only" if it's checked
 - On Xcode, select your connected device and run the app.
 
-**Running the ESP32:**
+# Running the ESP32:
 The ESP32 is using WifiProv.H library to provision wifi credentials over BLE signal. You can learn more about WifiProv in [https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/
 ](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFiProv/examples/WiFiProv)
 
