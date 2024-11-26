@@ -74,7 +74,7 @@ The ESP32 uses BLE to provision Wi-Fi credentials, enabling seamless connection 
 - As an alternative to BLE, we implemented mDNS (Multicast DNS), which allows the ESP32 to be discoverable via a custom hostname on the local network. This enables API calls using the hostname instead of relying on a dynamic or static IP address.
 - When the mobile app and ESP32 are connected to the same network, the app can send the user's UID to the ESP32 via HTTP. The ESP32 then updates the Firebase Realtime Database with the new user's information. This approach minimizes memory usage compared to continuous BLE broadcasting while maintaining discoverability.
   
-**Stochastic Algorithm Filter**
+**Stochastic Algorithm:**
 - The stochastic algorithm incorporated in the function manageWaterHeaterLoad(float ft) function uses probabilistic decision-making to control the water heater's state (on or off) based on grid frequency conditions.
     This function manages the water heater's load by considering:
     - The current grid frequency (ft).
