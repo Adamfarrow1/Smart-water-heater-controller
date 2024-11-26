@@ -1,14 +1,15 @@
 # SD-SWHC
 The mobile app for the Smart Water Heater Controller (SWHC) was developed using React Native, Expo, Firebase, and Node.js. The app provides users with a seamless interface to manage and monitor their smart water heaters. Key features include:
-    - Device Management: Users can add or remove water heaters, view all connected devices, and monitor specific device statuses like battery levels, grid conditions, and scheduling.
-    - Real-Time Monitoring: Firebase integration enables real-time updates for water heater status, grid frequency-based control, and user-defined schedules.
-    - Control and Scheduling: The app allows toggling the heater’s status, provides visual feedback on energy-saving states (like standby mode due to grid overload), and enables users to configure schedules for efficient water heater operation.
-    - Cross-Platform Accessibility: The app supports both iOS and Android platforms, using Expo's tools for development and testing, including integration with Firebase Realtime Database for cloud synchronization.
-    - The app works in conjunction with the ESP32 hardware, ensuring energy-efficient and dynamic control of water heaters, all accessible through a modern and user-friendly mobile interface.
+- Device Management: Users can add or remove water heaters, view all connected devices, and monitor specific device statuses like battery levels, grid conditions, and scheduling.
+- Real-Time Monitoring: Firebase integration enables real-time updates for water heater status, grid frequency-based control, and user-defined schedules.
+- Control and Scheduling: The app allows toggling the heater’s status, provides visual feedback on energy-saving states (like standby mode due to grid overload), and enables users to configure schedules for efficient water heater operation.
+- Cross-Platform Accessibility: The app supports both iOS and Android platforms, using Expo's tools for development and testing, including integration with Firebase Realtime Database for cloud synchronization.
+
+The app works in conjunction with the ESP32 hardware, ensuring energy-efficient and dynamic control of water heaters, all accessible through a modern and user-friendly mobile interface.
 
 # Developing using a Windows computer (limited see MacOS section for full functionality):
 
-**Important** : if you plan on developing with windows you need to comment out any of the imports and functions that use "@react-native-google-signin/google-signin" (login.js) or "@orbital-systems/react-native-esp-idf-provisioning" (BLEdemo.js, AddDevice.js, ScanScreen.js) 
+**Important:** If you plan on developing with windows, you need to comment out any of the imports and functions that use "@react-native-google-signin/google-signin" (login.js) or "@orbital-systems/react-native-esp-idf-provisioning" (BLEdemo.js, AddDevice.js, ScanScreen.js).
 
 **Prequisites**:
 - Node.js installed
@@ -33,7 +34,7 @@ The mobile app for the Smart Water Heater Controller (SWHC) was developed using 
 - Once you've opened your .xcworkspace:
 - In Signing & Capabilities,
     - Team: click on the drop down and select your team for example : Ximena Ramirez (Personal Team)
-    - remove Push Notifications from capabilies if you're not using a paid subcription of an Apple Developer account.
+    - Remove `Push Notifications` from capabilities if you're not using a paid subcription of an Apple Developer account.
     - Add your iPhone device in Xcode. To view this window, choose Window > Devices and Simulators. View and configure simulated devices from the Simulators tab. Use the (+) button to add and configure your iPhone for testing.
  
 **Running the app on an iPhone (must be on the same wifi network and sharing the same ip address):**
