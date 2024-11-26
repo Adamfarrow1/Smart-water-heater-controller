@@ -37,7 +37,7 @@ This project involves the development of a Smart Water Heater Controller using E
 
 **Running the app on an iPhone (no active metro server, using jsbundle instead).**
 In order for the app to run on an iPhone with no active metro server running on vscode, you must generate a jsbundle file.
-- on VScode: Build bundle with `npx expo export:embed --entry-file='node_modules/expo/AppEntry.js' --bundle output='./ios/main.jsbundle' --dev=false --platform='ios'`
+- on VScode: Build bundle by running the command `npx expo export:embed --entry-file='node_modules/expo/AppEntry.js' --bundle output='./ios/main.jsbundle' --dev=false --platform='ios'`
 - Xcode: Click on top bar of the project, select `Edit Scheme`, select `Build Configuration` - Release
   -  Build phases -> Bundle React Native code and images -> Check off "For install builds only" if it's checked
 - On Xcode, select your connected device. Use Build and Xcode will install the app on your connected iPhone. 
