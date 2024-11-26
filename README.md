@@ -4,7 +4,7 @@ The mobile app for the Smart Water Heater Controller (SWHC) was developed using 
     - Real-Time Monitoring: Firebase integration enables real-time updates for water heater status, grid frequency-based control, and user-defined schedules.
     - Control and Scheduling: The app allows toggling the heater’s status, provides visual feedback on energy-saving states (like standby mode due to grid overload), and enables users to configure schedules for efficient water heater operation.
     - Cross-Platform Accessibility: The app supports both iOS and Android platforms, using Expo's tools for development and testing, including integration with Firebase Realtime Database for cloud synchronization.
-- The app works in conjunction with the ESP32 hardware, ensuring energy-efficient and dynamic control of water heaters, all accessible through a modern and user-friendly mobile interface.
+    - The app works in conjunction with the ESP32 hardware, ensuring energy-efficient and dynamic control of water heaters, all accessible through a modern and user-friendly mobile interface.
 
 # Developing using a Windows computer (limited see MacOS section for full functionality):
 
