@@ -1,5 +1,10 @@
 # SD-SWHC
-This project involves the development of a Smart Water Heater Controller using ESP32 technology. The goal was to create an energy-efficient system that could monitor and control water heater usage based on user-defined parameters and environmental data.
+The mobile app for the Smart Water Heater Controller (SWHC) was developed using React Native, Expo, Firebase, and Node.js. The app provides users with a seamless interface to manage and monitor their smart water heaters. Key features include:
+    - Device Management: Users can add or remove water heaters, view all connected devices, and monitor specific device statuses like battery levels, grid conditions, and scheduling.
+    - Real-Time Monitoring: Firebase integration enables real-time updates for water heater status, grid frequency-based control, and user-defined schedules.
+    - Control and Scheduling: The app allows toggling the heater’s status, provides visual feedback on energy-saving states (like standby mode due to grid overload), and enables users to configure schedules for efficient water heater operation.
+    - Cross-Platform Accessibility: The app supports both iOS and Android platforms, using Expo's tools for development and testing, including integration with Firebase Realtime Database for cloud synchronization.
+- The app works in conjunction with the ESP32 hardware, ensuring energy-efficient and dynamic control of water heaters, all accessible through a modern and user-friendly mobile interface.
 
 # Developing using a Windows computer (limited see MacOS section for full functionality):
 
@@ -17,7 +22,7 @@ This project involves the development of a Smart Water Heater Controller using E
 
 
 
-# Developing using a MacOS:
+# Developing using MacOS:
 
 **VScode:**
 - run `npm install` to install node_modules
